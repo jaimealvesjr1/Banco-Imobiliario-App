@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Conta: {{ dados_jogador.name }}{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-2xl border-4 border-gray-200 p-4 sm:p-6 lg:p-8">
+    <header style="background-color: {{ dados_jogador.color }}" class="text-white p-6 rounded-xl mb-8 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+            <a href="{{ url_for('dashboard') }}" 
+               class="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors inline-block text-sm">
+               &larr; Mudar Perfil
+            </a>
+            <p class="text-xs uppercase tracking-widest opacity-70">Conta Pessoal</p>
+        </div>
+        
+        <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-3" style="color: {{ dados_jogador.color }}">
+                {{ dados_jogador.name[0].upper() }}
+            </div>
+            <h1 class="text-3xl font-bold opacity-90">{{ dados_jogador.name }}</h1>
+            <div class="mt-4 text-5xl font-extrabold tracking-tight">
+                R$ {{ dados_jogador.saldo | format_brl }}
+            </div>
+        </div>
+    </header>
+
+    <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">Realizar Pagamento (PAGAR)</h2>
+    <div class="p-5 rounded-xl bg-red-50 border border-red-300 shadow-md mb-10">
+        <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4">
+            <input type="hidden" name="remetente_id" value="{{ player_id }}"> <select id="recebedor" name="recebedor_id" required class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-red focus:border-monopoly-red bg-white text-gray-700">
+                <option value="">Selecione o Destinatário (Outro Jogador ou Banco)</option>
+                {% for dest_id, dest_name in destinatarios %}
+                    <option value="{{ dest_id }}">{{ dest_name }}</option>
+                {% endfor %}
+            </select>
+            
+            <input type="number" name="valor" required min="1" placeholder="Valor a Pagar (R$)"
+                   class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-red focus:border-monopoly-red text-lg font-mono">
+                   
+            <button type="submit" 
+                    class="w-full h-12 bg-monopoly-red hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2">
+                <span class="icon-pay text-lg"></span> CONFIRMAR PAGAMENTO
+            </button>
+        </form>
+    </div>
+
+    {% macro player_styled_name(player_id, player_name, self_color) %}
+        {% if player_id == 'Banco' %}
+            <strong class="text-monopoly-dark">🏦 Banco</strong>
+        {% else %}
+            <strong style="color: {{ id_to_name.get(player_id, {}).color or '#000000' }}">{{ player_name }}</strong>
+        {% endif %}
+    {% endmacro %}
+
+    <div class="pt-2">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-2">📜 Extrato Recente</h2>
+        <div class="space-y-4">
+            {% for t in historico %}
+                {% set is_incoming = t.recebedor_id == player_id %}
+                {% set other_party_id = t.remetente_id if is_incoming else t.recebedor_id %}
+                {% set other_party_name = id_to_name.get(other_party_id, 'Desconhecido') %}
+                {% set valor_display = t.valor | format_brl %}
+                
+                <div class="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center {{ 'bg-monopoly-green/70 text-green-700' if is_incoming else 'bg-red-100 text-red-600' }}">
+                            <span class="{{ 'icon-receive' if is_incoming else 'icon-pay' }} text-lg"></span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">
+                                {% if is_incoming %}
+                                    Recebido de 
+                                    {{ player_styled_name(t.remetente_id, other_party_name) }}
+                                {% else %}
+                                    Pago para 
+                                    {{ player_styled_name(t.recebedor_id, other_party_name) }}
+                                {% endif %}
+                            </p>
+                            <p class="text-xs text-gray-500">Transação ID #{{ t.id }}</p>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold {{ 'text-green-700' if is_incoming else 'text-red-600' }}">
+                        {{ '+' if is_incoming else '-' }}R$ {{ valor_display }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

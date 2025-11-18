@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Banco Imobiliário Digital{% endblock %}</title> 
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              monopoly: {
+                green: '#CDEAC0',
+                dark: '#1F2937',
+                board: '#FAF8EF',
+                red: '#FF6B6B',
+                blue: '#4ECDC4'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Estilo básico para ícones (em Flask/Jinja, você usaria emojis ou imagens reais) */
+      .icon-bank::before { content: '🏦'; }
+      .icon-player::before { content: '👤'; }
+      .icon-pay::before { content: '⬇️'; }
+      .icon-receive::before { content: '⬆️'; }
+    </style>
+  </head>
+  <body class="bg-monopoly-board text-gray-800 min-h-screen p-3 sm:p-6">
+    <div class="max-w-5xl mx-auto">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

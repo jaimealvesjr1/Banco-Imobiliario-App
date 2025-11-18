@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Banco Central{% endblock %}
+
+{% block content %}
+{% set ALL_TRANSACTIONS = [] %}
+{% for player_id, data in jogadores_data.items() %}
+    {% for t in data.historico %}
+        {% set _ = ALL_TRANSACTIONS.append(t) %}
+    {% endfor %}
+{% endfor %}
+
+{% for t in partida.Banco.historico %}
+    {% set _ = ALL_TRANSACTIONS.append(t) %}
+{% endfor %}
+
+{% set unique_transactions = [] %}
+{% set seen_ids = [] %}
+{% for t in ALL_TRANSACTIONS %}
+    {% if t.id not in seen_ids %}
+        {% set _ = seen_ids.append(t.id) %}
+        {% set _ = unique_transactions.append(t) %}
+    {% endif %}
+{% endfor %}
+{% set sorted_history = unique_transactions | sort(attribute='id', reverse=true) %}
+
+{% macro player_styled_name(player_id, player_name) %}
+    {% if player_id == 'Banco' %}
+        <strong class="text-monopoly-dark">🏦 Banco</strong>
+    {% else %}
+        <strong style="color: {{ partida[player_id].color }}">{{ player_name }}</strong>
+    {% endif %}
+{% endmacro %}
+
+<div class="bg-white rounded-xl shadow-2xl border-4 border-monopoly-dark p-4 sm:p-6 lg:p-8">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="p-3 mb-4 rounded-lg text-sm 
+                    {% if category == 'error' or category == 'warning' %}
+                        bg-red-100 text-red-700 border border-red-300
+                    {% else %}
+                        bg-green-100 text-green-700 border border-green-300
+                    {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <header class="bg-monopoly-dark text-white p-6 rounded-xl mb-8 shadow-xl">
+        <div class="flex justify-between items-center mb-4">
+            <a href="{{ url_for('dashboard') }}" 
+               class="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors inline-block text-sm">
+               &larr; Seleção de Perfil
+            </a>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div class="flex items-center gap-4 mb-4 sm:mb-0">
+                <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-monopoly-dark text-3xl font-bold shadow-md">
+                    <span class="icon-bank text-3xl"></span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">Banco Central</h1>
+                    <p class="text-sm opacity-70">Administração de Transações</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <h2 class="text-xl font-bold text-gray-800 mb-4">💰 Saldos dos Jogadores</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+        {% for player_id, data in jogadores_data.items() %}
+            <a href="{{ url_for('pagina_jogador', player_id=player_id) }}"
+               class="bg-monopoly-board/70 rounded-xl p-4 border border-gray-300 shadow-lg hover:shadow-xl transition-all duration-300 block hover:scale-[1.02] text-center"
+               style="border-bottom: 4px solid {{ data.color }}">
+                <div class="font-bold text-gray-700 text-lg mb-1">{{ data.name }}</div>
+                <div class="text-2xl font-extrabold text-monopoly-blue">R$ {{ data.saldo | format_brl }}</div> 
+                <p class="text-xs text-gray-500 mt-1">Ver/Pagar</p>
+            </a>
+        {% endfor %}
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-800 mb-6">🏆 Ranking de Saldo</h2>
+    <div class="space-y-3 mb-10">
+        {% for item in ranking %}
+            {% set player_id = item[0] %}
+            {% set data = item[1] %}
+            <div class="flex justify-between items-center p-3 sm:p-4 rounded-xl border border-gray-200 shadow-sm" style="border-left: 5px solid {{ data.color }}">
+                <div class="flex items-center gap-4">
+                    <span class="text-xl font-extrabold text-monopoly-dark w-6 text-center">#{{ loop.index }}</span> 
+                    <a href="{{ url_for('pagina_jogador', player_id=player_id) }}" style="color: {{ data.color }}" class="text-lg font-bold hover:underline">
+                        {{ data.name }}
+                    </a>
+                </div>
+                <div class="text-xl font-bold text-green-700">
+                    R$ {{ data.saldo | format_brl }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">💵 Transação com o Banco</h2>
+    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-lg">
+        <form method="POST" action="{{ url_for('transacao_unificada') }}" class="space-y-4">
+            
+            <label for="target_id" class="block text-sm font-medium text-gray-700">Quem Paga/Recebe:</label>
+            <select id="target_id" name="target_id" required
+                    class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue bg-white text-gray-700">
+                <option value="">Selecione um Jogador ou 'Todos'</option>
+                {% for player_id, data in jogadores_data.items() %}
+                    <option value="{{ player_id }}">{{ data.name }}</option>
+                {% endfor %}
+                <option disabled>––––––––––––––––––</option>
+                <option value="Todos">TODOS OS JOGADORES</option>
+            </select>
+            
+            <label for="valor_unificado" class="block text-sm font-medium text-gray-700 pt-2">Valor (R$):</label>
+            <input type="number" id="valor_unificado" name="valor" required min="1" placeholder="Valor (R$)"
+                   class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue text-lg font-mono">
+                   
+            <div class="grid grid-cols-2 gap-4 pt-4">
+                <button type="submit" name="action_type" value="COBRAR"
+                        class="w-full bg-monopoly-red hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                    COBRAR (Banco Recebe)
+                </button>
+                <button type="submit" name="action_type" value="PAGAR"
+                        class="w-full bg-monopoly-blue hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                    PAGAR (Banco Paga)
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-10 pt-8 border-t border-gray-200">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">📜 Extrato Completo do Jogo</h2>
+        <div class="space-y-4">
+            {% for t in sorted_history %}
+                {% set is_bank_involved = t.remetente_id == 'Banco' or t.recebedor_id == 'Banco' %}
+                {% set remetente_name = id_to_name.get(t.remetente_id, 'Desconhecido') %}
+                {% set recebedor_name = id_to_name.get(t.recebedor_id, 'Desconhecido') %}
+                {% set valor_display = t.valor | format_brl %}
+                
+                {% macro player_styled_name(player_id, player_name) %}
+                    {% if player_id == 'Banco' %}
+                        <strong class="text-monopoly-dark">🏦 Banco</strong>
+                    {% else %}
+                        <strong style="color: {{ partida[player_id].color }}">{{ player_name }}</strong>
+                    {% endif %}
+                {% endmacro %}
+                
+                <div class="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center border 
+                             {% if is_bank_involved %} 
+                                border-monopoly-dark/50 
+                             {% else %} 
+                                border-gray-200 
+                             {% endif %} 
+                             hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <p class="font-semibold text-gray-900">
+                                Transf. de 
+                                {{ player_styled_name(t.remetente_id, remetente_name) }}
+                                
+                                para 
+                                {{ player_styled_name(t.recebedor_id, recebedor_name) }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {% if is_bank_involved %}
+                                    (Transação com o Banco)
+                                {% else %}
+                                    (Transação entre Jogadores)
+                                {% endif %}
+                                ID #{{ t.id }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-xl font-bold text-gray-900">
+                        R$ {{ valor_display }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
