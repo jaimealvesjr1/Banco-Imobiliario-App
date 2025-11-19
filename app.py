@@ -26,7 +26,8 @@ DATA_FILE = 'banco_imobiliario_state.json'
 PARTIDA = {}
 BANK_PIN = "2525"
 LEILAO_ATUAL = {}
-SALDO_INICIAL = 250000
+COBRANCAS_PARCELADAS = {}
+SALDO_INICIAL = 500000
 
 @app.route('/banco_login', methods=['GET', 'POST'])
 def banco_login():
@@ -57,30 +58,34 @@ def banco_logout():
 
 def load_game_state():
     """Carrega o estado do jogo do arquivo JSON, se existir."""
-    global PARTIDA, LEILAO_ATUAL
+    global PARTIDA, LEILAO_ATUAL, COBRANCAS_PARCELADAS
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r') as f:
                 data = json.load(f)
                 PARTIDA = data.get('partida', {})
                 LEILAO_ATUAL = data.get('leilao', {})
+                COBRANCAS_PARCELADAS = data.get('cobrancas_parceladas', {})
             print(f"Estado do jogo carregado de {DATA_FILE}.")
         except Exception as e:
             print(f"Erro ao carregar o estado do jogo: {e}. Iniciando nova partida vazia.")
             PARTIDA = {}
             LEILAO_ATUAL = {}
+            COBRANCAS_PARCELADAS = {}
     else:
         print("Arquivo de estado do jogo não encontrado. Iniciando nova partida vazia.")
         PARTIDA = {}
         LEILAO_ATUAL = {}
+        COBRANCAS_PARCELADAS = {}
 
 def save_game_state():
     """Salva o estado atual do jogo no arquivo JSON."""
-    global PARTIDA, LEILAO_ATUAL
+    global PARTIDA, LEILAO_ATUAL, COBRANCAS_PARCELADAS
     try:
         data_to_save = {
             'partida': PARTIDA,
-            'leilao': LEILAO_ATUAL
+            'leilao': LEILAO_ATUAL,
+            'cobrancas_parceladas': COBRANCAS_PARCELADAS
         }
         with open(DATA_FILE, 'w') as f:
             json.dump(data_to_save, f, indent=4)
@@ -89,6 +94,87 @@ def save_game_state():
         print(f"Erro ao salvar o estado do jogo: {e}")
 
 # --- FUNÇÕES DE LÓGICA DO JOGO ---
+
+def calcular_valor_parcela(valor_total, num_parcelas):
+    """Calcula o valor da parcela, jogando o resto para a primeira parcela."""
+    valor_parcela_base = valor_total // num_parcelas
+    ajuste_centavos = valor_total % num_parcelas
+    
+    parcela_1 = valor_parcela_base + ajuste_centavos
+    valor_parcela_outras = valor_parcela_base
+    
+    return parcela_1, valor_parcela_outras
+
+def criar_parcelamento(credor_id, devedor_id, valor_total, num_parcelas):
+    global COBRANCAS_PARCELADAS
+    
+    try:
+        valor_total = int(valor_total)
+        num_parcelas = int(num_parcelas)
+        if valor_total <= 0 or num_parcelas <= 0 or num_parcelas > 12:
+            return "Erro: Valores inválidos. O número de parcelas deve ser entre 1 e 12."
+    except ValueError:
+        return "Erro: Valores devem ser números inteiros."
+        
+    if credor_id == devedor_id:
+        return "Erro: Não é possível parcelar cobrança para si mesmo."
+
+    parcela_1, valor_parcela_outras = calcular_valor_parcela(valor_total, num_parcelas)
+    
+    installment_id = str(uuid.uuid4())
+    
+    COBRANCAS_PARCELADAS[installment_id] = {
+        'devedor_id': devedor_id,
+        'credor_id': credor_id,
+        'valor_total': valor_total,
+        'num_parcelas_total': num_parcelas,
+        'num_parcelas_pagas': 0,
+        'valor_primeira_parcela': parcela_1,
+        'valor_outras_parcelas': valor_parcela_outras
+    }
+    save_game_state()
+    return f"Parcelamento criado! R$ {format_brl(valor_total)} em {num_parcelas}x (Primeira de R$ {format_brl(parcela_1)})."
+
+def pagar_parcela(devedor_id, installment_id):
+    global COBRANCAS_PARCELADAS
+    
+    cobranca = COBRANCAS_PARCELADAS.get(installment_id)
+    
+    # Validações
+    if not cobranca: return "Erro: Cobrança parcelada não encontrada."
+    if cobranca['devedor_id'] != devedor_id: return "Erro: Você não é o devedor desta cobrança."
+    if cobranca['num_parcelas_pagas'] >= cobranca['num_parcelas_total']: return "Erro: Esta cobrança já foi quitada."
+        
+    num_pagas = cobranca['num_parcelas_pagas']
+    
+    # Determinar o valor da parcela
+    valor_parcela = cobranca['valor_primeira_parcela'] if num_pagas == 0 else cobranca['valor_outras_parcelas']
+        
+    # Verificar Saldo (reusa a lógica de verificação de saldo da transação individual)
+    saldo_devedor = PARTIDA[devedor_id]['saldo']
+    if saldo_devedor < valor_parcela:
+        return f"Erro: Saldo R$ {format_brl(saldo_devedor)} insuficiente para pagar a parcela de R$ {format_brl(valor_parcela)}."
+
+    # Executar a Transação
+    PARTIDA[devedor_id]['saldo'] -= valor_parcela
+    PARTIDA[cobranca['credor_id']]['saldo'] += valor_parcela
+    
+    # Registrar a transação (Débito e Crédito)
+    registrar_transacao(devedor_id, cobranca['credor_id'], valor_parcela) 
+    
+    # Atualizar o estado da cobrança
+    cobranca['num_parcelas_pagas'] += 1
+    
+    num_total = cobranca['num_parcelas_total']
+    num_restante = num_total - cobranca['num_parcelas_pagas']
+    
+    if num_restante == 0:
+        del COBRANCAS_PARCELADAS[installment_id] # Remover a cobrança quitada
+        save_game_state()
+        return f"Parcelamento quitado! Parabéns!"
+        
+    save_game_state()
+    return f"Parcela paga com sucesso! Restam {num_restante} de {num_total}."
 
 def format_brl(value):
     """Formata um número inteiro para o formato BRL com separador de milhar (ex: 1.500)."""
@@ -584,7 +670,6 @@ def transacao():
     else:
         return redirect(url_for('pagina_jogador', player_id=remetente_id))
 
-# 6. Rota do Jogador (Permanece quase a mesma, usando IDs)
 @app.route('/jogador/<player_id>')
 def pagina_jogador(player_id):
     if player_id not in PARTIDA or player_id == 'Banco':
@@ -616,7 +701,8 @@ def pagina_jogador(player_id):
                            historico=historico,
                            id_to_name=id_to_name,
                            partida=PARTIDA,
-                           LEILAO_ATUAL=LEILAO_ATUAL)
+                           LEILAO_ATUAL=LEILAO_ATUAL,
+                           COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS)
 
 @app.route('/poupanca/controle', methods=['POST'])
 def controle_poupanca():
@@ -649,6 +735,24 @@ def poupanca_jogador(player_id):
 
     flash(mensagem, 'error' if "Erro" in mensagem else 'success')
     return redirect(url_for('pagina_jogador', player_id=player_id))
+
+@app.route('/cobrar/parcelar/<credor_id>', methods=['POST'])
+def criar_cobranca_parcelada(credor_id):
+    devedor_id = request.form['devedor_id']
+    valor_total = request.form['valor_total']
+    num_parcelas = request.form['num_parcelas']
+    
+    mensagem = criar_parcelamento(credor_id, devedor_id, valor_total, num_parcelas)
+    
+    flash(mensagem, 'error' if "Erro" in mensagem else 'success')
+    return redirect(url_for('pagina_jogador', player_id=credor_id))
+
+@app.route('/pagar/parcela/<devedor_id>/<installment_id>', methods=['POST'])
+def pagar_cobranca_parcelada(devedor_id, installment_id):
+    mensagem = pagar_parcela(devedor_id, installment_id)
+    
+    flash(mensagem, 'error' if "Erro" in mensagem else 'success')
+    return redirect(url_for('pagina_jogador', player_id=devedor_id))
 
 if __name__ == '__main__':
     app.run(debug=True)
