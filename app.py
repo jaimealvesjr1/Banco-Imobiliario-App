@@ -24,7 +24,8 @@ PRESET_COLORS = [
 # Variáveis globais para armazenar o estado do jogo
 DATA_FILE = 'banco_imobiliario_state.json' 
 PARTIDA = {}
-BANK_PIN = "2525" 
+BANK_PIN = "2525"
+LEILAO_ATUAL = {}
 SALDO_INICIAL = 250000
 
 @app.route('/banco_login', methods=['GET', 'POST'])
@@ -56,25 +57,33 @@ def banco_logout():
 
 def load_game_state():
     """Carrega o estado do jogo do arquivo JSON, se existir."""
-    global PARTIDA
+    global PARTIDA, LEILAO_ATUAL
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r') as f:
-                PARTIDA = json.load(f)
+                data = json.load(f)
+                PARTIDA = data.get('partida', {})
+                LEILAO_ATUAL = data.get('leilao', {})
             print(f"Estado do jogo carregado de {DATA_FILE}.")
         except Exception as e:
             print(f"Erro ao carregar o estado do jogo: {e}. Iniciando nova partida vazia.")
-            PARTIDA = {} # Volta para estado vazio se houver erro
+            PARTIDA = {}
+            LEILAO_ATUAL = {}
     else:
         print("Arquivo de estado do jogo não encontrado. Iniciando nova partida vazia.")
         PARTIDA = {}
+        LEILAO_ATUAL = {}
 
 def save_game_state():
     """Salva o estado atual do jogo no arquivo JSON."""
-    global PARTIDA
+    global PARTIDA, LEILAO_ATUAL
     try:
+        data_to_save = {
+            'partida': PARTIDA,
+            'leilao': LEILAO_ATUAL
+        }
         with open(DATA_FILE, 'w') as f:
-            json.dump(PARTIDA, f, indent=4)
+            json.dump(data_to_save, f, indent=4)
         print(f"Estado do jogo salvo em {DATA_FILE}.")
     except Exception as e:
         print(f"Erro ao salvar o estado do jogo: {e}")
@@ -361,8 +370,9 @@ def dashboard():
 # 2. Rota para Excluir (Resetar) o Jogo
 @app.route('/reset', methods=['POST'])
 def reset_game():
-    global PARTIDA
+    global PARTIDA, LEILAO_ATUAL
     PARTIDA = {}
+    LEILAO_ATUAL = {}
     
     save_game_state()
     
@@ -411,6 +421,115 @@ def transacao_unificada():
         
     return redirect(redirect_to)
 
+@app.route('/leilao/iniciar', methods=['POST'])
+def iniciar_leilao():
+    global LEILAO_ATUAL
+    
+    # 1. Verificação de Pré-condição
+    if LEILAO_ATUAL.get('ativo', False):
+        flash("Erro: Já existe um leilão ativo. Finalize-o antes de começar outro.", 'error')
+        return redirect(url_for('pagina_banco'))
+        
+    propriedade = request.form['propriedade']
+    lance_inicial = request.form['lance_inicial']
+    
+    try:
+        lance_inicial = int(lance_inicial)
+        if lance_inicial <= 0: raise ValueError
+    except ValueError:
+        flash("Erro: O lance inicial deve ser um número inteiro positivo.", 'error')
+        return redirect(url_for('pagina_banco'))
+
+    # 2. Inicializa o Leilão
+    LEILAO_ATUAL = {
+        'ativo': True,
+        'propriedade': propriedade,
+        'lance_minimo': lance_inicial,
+        'lance_atual': lance_inicial,
+        'jogador_atual_id': None, # ID do jogador com o lance mais alto
+        'jogador_atual_nome': None,
+    }
+    save_game_state()
+    flash(f"Leilão da propriedade '{propriedade}' iniciado com lance inicial de R$ {format_brl(lance_inicial)}!", 'success')
+    return redirect(url_for('pagina_banco'))
+
+
+@app.route('/leilao/lance/<player_id>', methods=['POST'])
+def dar_lance(player_id):
+    global LEILAO_ATUAL
+    
+    if not LEILAO_ATUAL.get('ativo', False):
+        flash("Erro: Não há leilão ativo para dar lances.", 'error')
+        return redirect(url_for('pagina_jogador', player_id=player_id))
+        
+    novo_lance = request.form['lance']
+    
+    try:
+        novo_lance = int(novo_lance)
+        
+        # 🌟 NOVA ORDEM DE VERIFICAÇÃO 🌟
+
+        # 1. Verificar Saldo Mínimo na Conta Corrente
+        saldo_jogador = PARTIDA[player_id]['saldo']
+        if saldo_jogador < novo_lance:
+            # Note: Usamos format_brl para a mensagem de erro
+            flash(f"Erro: Saldo R$ {format_brl(saldo_jogador)} insuficiente para cobrir o lance de R$ {format_brl(novo_lance)}.", 'error')
+            return redirect(url_for('pagina_jogador', player_id=player_id))
+
+        # 2. Verificar o Lance Mínimo (deve ser maior que o lance atual)
+        if novo_lance <= LEILAO_ATUAL['lance_atual']:
+            flash(f"Erro: O lance deve ser maior que o lance atual (R$ {format_brl(LEILAO_ATUAL['lance_atual'])}).", 'error')
+            return redirect(url_for('pagina_jogador', player_id=player_id))
+        
+    except ValueError:
+        flash("Erro: O lance deve ser um número inteiro.", 'error')
+        return redirect(url_for('pagina_jogador', player_id=player_id))
+
+    # 3. Atualizar o Leilão
+    jogador_nome = PARTIDA[player_id]['name']
+    LEILAO_ATUAL['lance_atual'] = novo_lance
+    LEILAO_ATUAL['jogador_atual_id'] = player_id
+    LEILAO_ATUAL['jogador_atual_nome'] = jogador_nome
+    save_game_state()
+    
+    flash(f"Novo lance de R$ {format_brl(novo_lance)} dado por {jogador_nome}!", 'success')
+    return redirect(url_for('pagina_jogador', player_id=player_id))
+
+@app.route('/leilao/finalizar', methods=['POST'])
+def finalizar_leilao():
+    global LEILAO_ATUAL
+    
+    if not LEILAO_ATUAL.get('ativo', False):
+        flash("Erro: Não há leilão ativo para finalizar.", 'error')
+        return redirect(url_for('pagina_banco'))
+        
+    vencedor_id = LEILAO_ATUAL['jogador_atual_id']
+    propriedade = LEILAO_ATUAL['propriedade']
+    valor_final = LEILAO_ATUAL['lance_atual']
+    
+    if vencedor_id is None:
+        # Ninguém deu lance após o inicial
+        LEILAO_ATUAL = {}
+        save_game_state()
+        flash("Leilão encerrado sem lances válidos após o inicial.", 'warning')
+        return redirect(url_for('pagina_banco'))
+
+    # 1. Executar a Transação
+    # O jogador paga (remetente) -> O banco recebe (recebedor)
+    mensagem = executar_transacao(vencedor_id, 'Banco', valor_final)
+    
+    if "Erro" in mensagem:
+        # Se houver erro de saldo (o que não deve acontecer se a verificação foi feita ao dar o lance)
+        flash(f"Erro fatal ao finalizar o leilão: {mensagem}", 'error')
+        return redirect(url_for('pagina_banco'))
+
+    # 2. Limpar o Leilão e Anunciar o Vencedor
+    vencedor_nome = PARTIDA[vencedor_id]['name']
+    LEILAO_ATUAL = {} # Limpa o estado
+    save_game_state()
+    
+    flash(f"Leilão FINALIZADO! {vencedor_nome} venceu a propriedade '{propriedade}' por R$ {format_brl(valor_final)}!", 'success')
+    return redirect(url_for('pagina_banco'))
 
 # 🌟 Rota /banco (Integração do Ranking)
 @app.route('/banco')
@@ -440,10 +559,11 @@ def pagina_banco():
     
     return render_template('banco.html', 
                            jogadores_data=jogadores_data,
-                           ranking_corrente=ranking_corrente, # Renomeado
-                           ranking_poupanca=ranking_poupanca, # NOVO
+                           ranking_corrente=ranking_corrente,
+                           ranking_poupanca=ranking_poupanca,
                            id_to_name=get_id_to_name_map(),
-                           partida=PARTIDA)
+                           partida=PARTIDA,
+                           LEILAO_ATUAL=LEILAO_ATUAL)
 
 # 5. Rota de Transação Individual
 @app.route('/transacao', methods=['POST'])
@@ -495,7 +615,8 @@ def pagina_jogador(player_id):
                            destinatarios=destinatarios,
                            historico=historico,
                            id_to_name=id_to_name,
-                           partida=PARTIDA)
+                           partida=PARTIDA,
+                           LEILAO_ATUAL=LEILAO_ATUAL)
 
 @app.route('/poupanca/controle', methods=['POST'])
 def controle_poupanca():
