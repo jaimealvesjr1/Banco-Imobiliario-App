@@ -55,6 +55,10 @@
                class="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors inline-block text-sm">
                &larr; Seleção de Perfil
             </a>
+            <a href="{{ url_for('banco_logout') }}" 
+               class="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition-colors inline-block text-sm font-bold">
+               SAIR 🔒
+            </a>
         </div>
         
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between">
@@ -83,55 +87,133 @@
         {% endfor %}
     </div>
 
-    <h2 class="text-xl font-bold text-gray-800 mb-6">🏆 Ranking de Saldo</h2>
-    <div class="space-y-3 mb-10">
-        {% for item in ranking %}
-            {% set player_id = item[0] %}
-            {% set data = item[1] %}
-            <div class="flex justify-between items-center p-3 sm:p-4 rounded-xl border border-gray-200 shadow-sm" style="border-left: 5px solid {{ data.color }}">
-                <div class="flex items-center gap-4">
-                    <span class="text-xl font-extrabold text-monopoly-dark w-6 text-center">#{{ loop.index }}</span> 
-                    <a href="{{ url_for('pagina_jogador', player_id=player_id) }}" style="color: {{ data.color }}" class="text-lg font-bold hover:underline">
-                        {{ data.name }}
-                    </a>
-                </div>
-                <div class="text-xl font-bold text-green-700">
-                    R$ {{ data.saldo | format_brl }}
-                </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-6">🏆 Ranking da Conta Corrente</h2>
+            <div class="space-y-3 mb-10">
+                {% for item in ranking_corrente %}
+                    {% set player_id = item[0] %}
+                    {% set data = item[1] %}
+                    <div class="flex justify-between items-center p-3 sm:p-4 rounded-xl border border-gray-200 shadow-sm" style="border-left: 5px solid {{ data.color }}">
+                        <div class="flex items-center gap-4">
+                            <span class="text-xl font-extrabold text-monopoly-dark w-6 text-center">#{{ loop.index }}</span> 
+                            <a href="{{ url_for('pagina_jogador', player_id=player_id) }}" style="color: {{ data.color }}" class="text-lg font-bold hover:underline">
+                                {{ data.name }}
+                            </a>
+                        </div>
+                        <div class="text-xl font-bold text-green-700">
+                            R$ {{ data.saldo | format_brl }}
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-6">🏦 Ranking da Conta Poupança</h2>
+            <div class="space-y-3 mb-10">
+                {% for item in ranking_poupanca %}
+                    {% set player_id = item[0] %}
+                    {% set data = item[1] %}
+                    <div class="flex justify-between items-center p-3 sm:p-4 rounded-xl border border-gray-200 shadow-sm" style="border-left: 5px solid {{ data.color }}">
+                        <div class="flex items-center gap-4">
+                            <span class="text-xl font-extrabold text-monopoly-dark w-6 text-center">#{{ loop.index }}</span> 
+                            <a href="{{ url_for('pagina_jogador', player_id=player_id) }}" style="color: {{ data.color }}" class="text-lg font-bold hover:underline">
+                                {{ data.name }}
+                            </a>
+                        </div>
+                        <div class="text-xl font-bold text-indigo-700">
+                            R$ {{ data.poupanca | format_brl }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
-    <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">💵 Transação com o Banco</h2>
-    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-lg">
-        <form method="POST" action="{{ url_for('transacao_unificada') }}" class="space-y-4">
-            
-            <label for="target_id" class="block text-sm font-medium text-gray-700">Quem Paga/Recebe:</label>
-            <select id="target_id" name="target_id" required
-                    class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue bg-white text-gray-700">
-                <option value="">Selecione um Jogador ou 'Todos'</option>
-                {% for player_id, data in jogadores_data.items() %}
-                    <option value="{{ player_id }}">{{ data.name }}</option>
-                {% endfor %}
-                <option disabled>––––––––––––––––––</option>
-                <option value="Todos">TODOS OS JOGADORES</option>
-            </select>
-            
-            <label for="valor_unificado" class="block text-sm font-medium text-gray-700 pt-2">Valor (R$):</label>
-            <input type="number" id="valor_unificado" name="valor" required min="1" placeholder="Valor (R$)"
-                   class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue text-lg font-mono">
-                   
-            <div class="grid grid-cols-2 gap-4 pt-4">
-                <button type="submit" name="action_type" value="COBRAR"
-                        class="w-full bg-monopoly-red hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
-                    COBRAR (Banco Recebe)
-                </button>
-                <button type="submit" name="action_type" value="PAGAR"
-                        class="w-full bg-monopoly-blue hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
-                    PAGAR (Banco Paga)
-                </button>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">💵 Transações em Conta Corrente</h2>
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-lg">
+                <form method="POST" action="{{ url_for('transacao_unificada') }}" class="space-y-4">
+                    
+                    <label for="target_id" class="block text-sm font-medium text-gray-700">Quem Paga/Recebe:</label>
+                    <select id="target_id" name="target_id" required
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue bg-white text-gray-700">
+                        <option value="">Selecione um Jogador</option>
+                        {% for player_id, data in jogadores_data.items() %}
+                            <option value="{{ player_id }}">{{ data.name }}</option>
+                        {% endfor %}
+                        <option disabled>––––––––––––––––––</option>
+                        <option value="Todos">TODOS OS JOGADORES</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-700 pt-2">Tipo de Valor:</label>
+                    <div class="flex gap-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="value_type" value="FIXO" checked
+                                class="form-radio text-monopoly-blue h-5 w-5" onclick="updateValueInput('FIXO')">
+                            <span class="ml-2 text-gray-700">Valor Fixo (R$)</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="value_type" value="PCT"
+                                class="form-radio text-monopoly-blue h-5 w-5" onclick="updateValueInput('PCT')">
+                            <span class="ml-2 text-gray-700">Percentual (%)</span>
+                        </label>
+                    </div>
+                    
+                    <label for="valor_input" class="block text-sm font-medium text-gray-700 pt-2">Valor (<span id="unit_label">R$</span>):</label>
+                    <input type="number" id="valor_input" name="valor" required min="1" placeholder="Valor (R$)"
+                        step="1"
+                        class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-blue focus:border-monopoly-blue text-lg font-mono">
+                        
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <button type="submit" name="action_type_final" value="COBRAR"
+                                class="w-full bg-monopoly-red hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                            DEBITAR
+                        </button>
+                        <button type="submit" name="action_type_final" value="PAGAR"
+                                class="w-full bg-monopoly-blue hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                            CREDITAR
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">🔒 Controle de Rendimento da Poupança</h2>
+            <div class="bg-indigo-50 p-5 rounded-xl border border-indigo-300 shadow-md mb-10">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    </h3>
+                
+                <form method="POST" action="{{ url_for('controle_poupanca') }}" class="mb-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        {% if partida.Banco.poupanca_trancada %}
+                            <button type="submit" name="action" value="destrancar" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                                Destrancar Poupança
+                            </button>
+                        {% else %}
+                            <button type="submit" name="action" value="trancar" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                                Trancar Poupança
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+
+                {% if partida.Banco.poupanca_trancada %}
+                    <hr class="mb-4">
+                    <form method="POST" action="{{ url_for('controle_poupanca') }}" class="space-y-4">
+                        <label for="percentual_render" class="block text-sm font-medium text-gray-700 pt-2">Aplicar Rendimento (%):</label>
+                        <input type="number" name="percentual_render" required min="0.01" max="100" step="0.01" placeholder="Ex: 5"
+                            class="w-full px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-lg font-mono">
+                        <button type="submit" name="action" value="render" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                            APLICAR RENDIMENTO
+                        </button>
+                        <p class="text-xs text-gray-500 mt-2">O rendimento é aplicado apenas ao saldo da poupança.</p>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
     <div class="mt-10 pt-8 border-t border-gray-200">
@@ -185,4 +267,29 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateValueInput(type) {
+    const input = document.getElementById('valor_input');
+    const unitLabel = document.getElementById('unit_label');
+    
+    if (type === 'PCT') {
+        unitLabel.textContent = '%';
+        input.placeholder = 'Percentual (1 a 100)';
+        input.min = '0.01';
+        input.max = '100';
+        input.step = '0.01';
+    } else { // FIXO
+        unitLabel.textContent = 'R$';
+        input.placeholder = 'Valor (R$)';
+        input.min = '1';
+        input.max = ''; 
+        input.step = '1';
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    updateValueInput('FIXO');
+});
+</script>
+
 {% endblock %}

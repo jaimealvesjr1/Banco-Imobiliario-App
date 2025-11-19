@@ -24,7 +24,33 @@ PRESET_COLORS = [
 # Variáveis globais para armazenar o estado do jogo
 DATA_FILE = 'banco_imobiliario_state.json' 
 PARTIDA = {}
+BANK_PIN = "2525" 
 SALDO_INICIAL = 250000
+
+@app.route('/banco_login', methods=['GET', 'POST'])
+def banco_login():
+    if 'Banco' not in PARTIDA:
+        flash("Partida não iniciada.", 'error')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        pin = request.form['pin']
+        if pin == BANK_PIN:
+            session['bank_logged_in'] = True
+            flash("Bem vindo ao Banco Central!", 'success')
+            return redirect(url_for('pagina_banco'))
+        else:
+            flash("PIN Incorreto. Acesso Negado.", 'error')
+            return redirect(url_for('banco_login'))
+    
+    # GET request: Exibir o formulário de login
+    return render_template('banco_login.html')
+
+@app.route('/banco_logout')
+def banco_logout():
+    session.pop('bank_logged_in', None)
+    flash("Sessão do Banco encerrada.", 'success')
+    return redirect(url_for('dashboard'))
 
 # --- FUNÇÕES DE PERSISTÊNCIA DE DADOS (NOVAS) ---
 
@@ -68,6 +94,56 @@ def format_brl(value):
     # Ex: 1500 -> 1.500
     return f"{value:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+def transferir_poupanca(player_id, valor, para_poupanca=True):
+    """Transfere valor entre saldo e poupança de um jogador."""
+    try:
+        valor = int(valor)
+        if valor <= 0: return "Erro: Valor deve ser positivo."
+    except ValueError: return "Erro: Valor inválido."
+
+    jogador = PARTIDA.get(player_id)
+    if not jogador: return "Erro: Jogador não encontrado."
+    
+    if para_poupanca: # Saldo -> Poupança
+        if jogador['saldo'] < valor: return "Erro: Saldo insuficiente para investir."
+        jogador['saldo'] -= valor
+        jogador['poupanca'] += valor
+        return f"R$ {format_brl(valor)} investido na poupança com sucesso!"
+    else: # Poupança -> Saldo (só se não estiver trancado)
+        if PARTIDA['Banco']['poupanca_trancada']: return "Erro: Poupança está trancada. Não é possível resgatar."
+        if jogador['poupanca'] < valor: return "Erro: Valor de resgate maior que a poupança."
+        jogador['saldo'] += valor
+        jogador['poupanca'] -= valor
+        return f"R$ {format_brl(valor)} resgatado da poupança com sucesso!"
+
+def trancar_poupanca(trancar):
+    """Tranca/Destranca a poupança globalmente."""
+    PARTIDA['Banco']['poupanca_trancada'] = trancar
+    save_game_state()
+    return "Poupança trancada com sucesso." if trancar else "Poupança destrancada com sucesso."
+
+def aplicar_rendimento(percentual):
+    """Aplica rendimento na poupança de todos os jogadores."""
+    if not PARTIDA['Banco']['poupanca_trancada']: return "Erro: Poupança não está trancada. Rendimento não pode ser aplicado."
+    
+    try:
+        percentual = float(percentual)
+        if percentual <= 0 or percentual > 100: return "Erro: Percentual deve estar entre 0.01 e 100."
+    except ValueError: return "Erro: Percentual inválido."
+    
+    fator = percentual / 100
+    total_rendido = 0
+    
+    for player_id, data in PARTIDA.items():
+        if player_id not in ('Banco', 'timestamp'):
+            valor_rendido = int(data['poupanca'] * fator) # Arredonda para baixo
+            if valor_rendido > 0:
+                data['poupanca'] += valor_rendido
+                total_rendido += valor_rendido
+    
+    save_game_state()
+    return f"Rendimento de {percentual}% aplicado! Total rendido: R$ {format_brl(total_rendido)}."
+
 app.jinja_env.filters['format_brl'] = format_brl
 
 def registrar_transacao(remetente_id, recebedor_id, valor):
@@ -95,8 +171,6 @@ def registrar_transacao(remetente_id, recebedor_id, valor):
     
     # Adiciona ao histórico geral do Banco
     PARTIDA['Banco']['historico'].append(transacao)
-    save_game_state()
-
 
 def executar_transacao(remetente_id, recebedor_id, valor):
     """
@@ -112,9 +186,12 @@ def executar_transacao(remetente_id, recebedor_id, valor):
 
     # 1. Diminui o saldo do remetente
     if remetente_id != 'Banco':
-        if remetente_id not in PARTIDA or PARTIDA[remetente_id]['saldo'] < valor:
-             # Adicionando verificação de saldo
-            return f"Erro: Saldo insuficiente para o remetente: {PARTIDA.get(remetente_id, {}).get('name', remetente_id)}."
+        if remetente_id not in PARTIDA:
+            return f"Erro: Remetente ID '{remetente_id}' não encontrado."
+            
+        saldo_atual = PARTIDA[remetente_id]['saldo']
+        if saldo_atual < valor:
+            return f"Erro: Saldo R$ {format_brl(saldo_atual)} insuficiente para pagar R$ {format_brl(valor)}."
         PARTIDA[remetente_id]['saldo'] -= valor
     
     # 2. Aumenta o saldo do recebedor
@@ -125,9 +202,8 @@ def executar_transacao(remetente_id, recebedor_id, valor):
 
     # 3. Registra a transação
     registrar_transacao(remetente_id, recebedor_id, valor)
-    
+    save_game_state()
     return "Transação realizada com sucesso!"
-
 
 def executar_transacao_massa(tipo, valor):
     """
@@ -162,7 +238,50 @@ def executar_transacao_massa(tipo, valor):
             
         return f"Pagamento de R$ {valor} realizado com sucesso para todos os {len(jogadores_ativos)} jogadores."
     
-    return "Erro desconhecido na transação em massa."
+    save_game_state()
+    return f"Cobrança de R$ {valor} realizada com sucesso para todos os {len(jogadores_ativos)} jogadores."
+
+def executar_transacao_percentual(tipo, percentual):
+    """
+    Executa transação em massa baseada em um percentual do saldo atual do jogador.
+    """
+    try:
+        percentual = float(percentual)
+        if percentual <= 0 or percentual > 100:
+            return "Erro: O percentual deve estar entre 0.01 e 100."
+    except ValueError:
+        return "Erro: O percentual deve ser um número válido."
+        
+    fator = percentual / 100
+    jogadores_ativos = [id for id in PARTIDA if id not in ('Banco', 'timestamp')]
+    
+    total_movimentado = 0
+    
+    if tipo == 'COBRAR_PCT':
+        for player_id in jogadores_ativos:
+            saldo_jogador = PARTIDA[player_id]['saldo']
+            valor_movimentado = int(saldo_jogador * fator) # Arredonda para baixo/inteiro para simplificar
+            
+            if valor_movimentado > 0:
+                PARTIDA[player_id]['saldo'] -= valor_movimentado
+                registrar_transacao(player_id, 'Banco', valor_movimentado)
+                total_movimentado += valor_movimentado
+        
+        return f"Cobrança de {percentual}% (Total R$ {format_brl(total_movimentado)}) realizada com sucesso para todos os jogadores."
+
+    elif tipo == 'PAGAR_PCT':
+        for player_id in jogadores_ativos:
+            saldo_jogador = PARTIDA[player_id]['saldo']
+            valor_movimentado = int(saldo_jogador * fator) # Arredonda para baixo/inteiro
+            
+            if valor_movimentado > 0:
+                PARTIDA[player_id]['saldo'] += valor_movimentado
+                registrar_transacao('Banco', player_id, valor_movimentado)
+                total_movimentado += valor_movimentado
+                
+        return f"Pagamento de {percentual}% (Total R$ {format_brl(total_movimentado)}) realizado com sucesso para todos os jogadores."
+        
+    return "Erro desconhecido na transação percentual."
 
 def get_id_to_name_map():
     id_to_name = {
@@ -209,7 +328,7 @@ def dashboard():
             
         # Inicializa a nova partida
         PARTIDA = {
-            'Banco': {'historico': []},
+            'Banco': {'historico': [], 'poupanca_trancada': False},
             'timestamp': 0
         }
         
@@ -219,9 +338,9 @@ def dashboard():
                 'name': p['name'], 
                 'saldo': saldo_inicial, 
                 'historico': [], 
-                'color': p['color']
-            }
-        
+                'color': p['color'],
+                'poupanca': 0 # 🌟 NOVO: Saldo na poupança
+            }        
         save_game_state()
         
         flash("Partida iniciada com sucesso! Escolha seu perfil para continuar.", 'success')
@@ -252,37 +371,37 @@ def reset_game():
 
 @app.route('/transacao-unificada', methods=['POST'])
 def transacao_unificada():
-    # Tipo de ação: 'COBRAR' (Banco recebe) ou 'PAGAR' (Banco paga)
-    action_type = request.form['action_type'] 
+    # Tipo de valor: 'FIXO' ou 'PCT' (lido do radio button)
+    value_type = request.form.get('value_type', 'FIXO') 
     
-    # Destinatário ou Pagador: player_id ou 'Todos'
+    # Tipo de ação final: 'COBRAR' ou 'PAGAR' (lido do botão submit)
+    action_type_final = request.form['action_type_final']
+    
     target_id = request.form['target_id']
     valor = request.form['valor']
 
     if target_id == 'Todos':
-        # Transação em Massa (Sempre Banco vs Todos)
-        if action_type == 'COBRAR':
-            mensagem = executar_transacao_massa('COBRAR', valor)
-        else: # PAGAR
-            mensagem = executar_transacao_massa('PAGAR', valor)
+        if value_type == 'PCT':
+            mensagem = executar_transacao_percentual(action_type_final + '_PCT', valor)
+        else: # FIXO
+            mensagem = executar_transacao_massa(action_type_final, valor)
         
-        # Redireciona sempre para o banco após transação em massa
         redirect_to = url_for('pagina_banco') 
 
     else:
-        # Transação Individual (Sempre Banco vs 1 Jogador)
-        if action_type == 'COBRAR':
-            # Cobrar: Jogador Paga (Remetente) -> Banco Recebe (Recebedor)
+        # Transação Individual (Permitido apenas valor FIXO)
+        if value_type == 'PCT':
+             flash("Erro: Transações percentuais só podem ser aplicadas a 'TODOS OS JOGADORES'.", 'error')
+             return redirect(url_for('pagina_banco'))
+             
+        if action_type_final == 'COBRAR':
             remetente_id = target_id
             recebedor_id = 'Banco'
         else: # PAGAR
-            # Pagar: Banco Paga (Remetente) -> Jogador Recebe (Recebedor)
             remetente_id = 'Banco'
             recebedor_id = target_id
         
         mensagem = executar_transacao(remetente_id, recebedor_id, valor)
-        
-        # Redireciona para o banco (já que a transação foi iniciada de lá)
         redirect_to = url_for('pagina_banco')
 
     if "Erro" in mensagem or "Aviso" in mensagem:
@@ -299,19 +418,30 @@ def pagina_banco():
     if 'Banco' not in PARTIDA:
         flash("Partida não iniciada.", 'error')
         return redirect(url_for('dashboard'))
+    
+    if not session.get('bank_logged_in'):
+        return redirect(url_for('banco_login'))
         
     jogadores_data = {id: data for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
     
-    # 🌟 NOVO: Criação do Ranking de Saldo
-    ranking = sorted(
+    # 🌟 Ranking 1: CONTA CORRENTE (Ranking atual)
+    ranking_corrente = sorted(
         jogadores_data.items(),
         key=lambda item: item[1]['saldo'],
         reverse=True
     )
     
+    # 🌟 NOVO: Ranking 2: CONTA POUPANÇA
+    ranking_poupanca = sorted(
+        jogadores_data.items(),
+        key=lambda item: item[1]['poupanca'], # Ordena pela chave 'poupanca'
+        reverse=True
+    )
+    
     return render_template('banco.html', 
                            jogadores_data=jogadores_data,
-                           ranking=ranking,  # Passa o ranking
+                           ranking_corrente=ranking_corrente, # Renomeado
+                           ranking_poupanca=ranking_poupanca, # NOVO
                            id_to_name=get_id_to_name_map(),
                            partida=PARTIDA)
 
@@ -365,7 +495,39 @@ def pagina_jogador(player_id):
                            destinatarios=destinatarios,
                            historico=historico,
                            id_to_name=id_to_name,
-                           PARTIDA=PARTIDA)
+                           partida=PARTIDA)
+
+@app.route('/poupanca/controle', methods=['POST'])
+def controle_poupanca():
+    action = request.form['action']
+    
+    if action == 'trancar':
+        mensagem = trancar_poupanca(True)
+    elif action == 'destrancar':
+        mensagem = trancar_poupanca(False)
+    elif action == 'render':
+        percentual = request.form.get('percentual_render')
+        mensagem = aplicar_rendimento(percentual)
+    else:
+        mensagem = "Ação de poupança inválida."
+        
+    flash(mensagem, 'error' if "Erro" in mensagem else 'success')
+    return redirect(url_for('pagina_banco'))
+
+@app.route('/jogador/poupanca/<player_id>', methods=['POST'])
+def poupanca_jogador(player_id):
+    action = request.form['action']
+    valor = request.form['valor']
+    
+    if action == 'investir':
+        mensagem = transferir_poupanca(player_id, valor, True)
+    elif action == 'resgatar':
+        mensagem = transferir_poupanca(player_id, valor, False)
+    else:
+        mensagem = "Ação inválida."
+
+    flash(mensagem, 'error' if "Erro" in mensagem else 'success')
+    return redirect(url_for('pagina_jogador', player_id=player_id))
 
 if __name__ == '__main__':
     app.run(debug=True)

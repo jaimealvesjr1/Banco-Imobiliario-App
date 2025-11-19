@@ -33,12 +33,12 @@
         <div class="space-y-4">
             <h2 class="text-xl font-bold text-gray-800 border-b pb-3">Selecione o Perfil:</h2>
 
-            <a href="{{ url_for('pagina_banco') }}" class="flex items-center justify-between p-4 bg-gray-100 rounded-xl shadow-md border border-gray-200 hover:bg-gray-200 transition-all">
+            <a href="{{ url_for('banco_login') }}" class="flex items-center justify-between p-4 bg-gray-100 rounded-xl shadow-md border border-gray-200 hover:bg-gray-200 transition-all">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center bg-monopoly-dark text-white text-xl">🏦</div>
                     <span class="font-bold text-gray-800 text-lg">Banco Central</span>
                 </div>
-                <span class="text-gray-500">&rarr; Acessar Painel</span>
+                <span class="text-gray-500">&rarr; Painel Administrativo</span>
             </a>
 
             {% for player_id, player_name in jogadores %}
@@ -52,7 +52,7 @@
                             <span class="text-sm text-gray-500 block">R$ {{ PARTIDA[player_id].saldo | format_brl }}</span>
                         </div>
                     </div>
-                    <span class="text-gray-500">&rarr; Abrir Conta</span>
+                    <span class="text-gray-500">&rarr; Acessar Conta</span>
                 </a>
             {% endfor %}
 
