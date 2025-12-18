@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl border-4 border-monopoly-dark mt-10">
+    <h2 class="text-2xl font-bold mb-4">Crie seu PIN de 4 dígitos</h2>
+    <p class="mb-6 text-gray-600">Olá <strong>{{ jogador.name }}</strong>, defina sua senha de acesso.</p>
+    <form method="POST">
+        <input type="password" name="novo_pin" maxlength="4" required class="w-full text-center text-3xl font-mono border-2 border-gray-300 rounded-lg p-3 mb-6">
+        <button type="submit" class="w-full bg-monopoly-blue text-white font-bold py-4 rounded-xl">DEFINIR PIN E ENTRAR</button>
+    </form>
+</div>
+{% endblock %}

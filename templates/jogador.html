@@ -1,261 +1,172 @@
 {% extends "base.html" %}
 
-{% block title %}Conta: {{ dados_jogador.name }}{% endblock %}
+{% block title %}Carteira: {{ dados_jogador.name }}{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow-2xl border-4 border-gray-200 p-4 sm:p-6 lg:p-8">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
+<div class="max-w-md mx-auto pb-20"> {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="p-3 mb-4 rounded-lg text-sm 
-                    {% if category == 'error' or category == 'warning' %}
-                        bg-red-100 text-red-700 border border-red-300
-                    {% else %}
-                        bg-green-100 text-green-700 border border-green-300
-                    {% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="fixed top-4 left-4 right-4 z-50 space-y-2">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-2xl shadow-2xl border-2 backdrop-blur-md animate-pulse
+                        {% if category == 'error' or category == 'warning' %}
+                            bg-red-50/90 text-red-800 border-red-200
+                        {% else %}
+                            bg-green-50/90 text-green-800 border-green-200
+                        {% endif %}">
+                        <p class="text-center font-black text-sm uppercase">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
 
-    <header style="background-color: {{ dados_jogador.color }}" class="text-white p-6 rounded-xl mb-8 shadow-xl">
-        <div class="flex items-center justify-between mb-4">
-            <a href="{{ url_for('dashboard') }}" 
-               class="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors inline-block text-sm">
-               &larr; Mudar Perfil
+    <header style="background-color: {{ dados_jogador.color }}" class="relative text-white p-8 rounded-3xl mb-6 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between border-b-8 border-black/20">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+        
+        <div class="flex items-center justify-between relative z-10">
+            <a href="{{ url_for('logout_jogador', player_id=player_id) }}" 
+               class="px-4 py-2 bg-black/20 hover:bg-black/40 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest border border-white/10">
+               &larr; SAIR E TRAVAR
             </a>
-            <p class="text-xs uppercase tracking-widest opacity-70">Conta Pessoal</p>
+            <span class="text-[10px] font-black opacity-60 uppercase tracking-widest">Digital Bank Card</span>
         </div>
         
-        <div class="flex flex-col items-center text-center">
-            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-3" style="color: {{ dados_jogador.color }}">
-                {{ dados_jogador.name[0].upper() }}
-            </div>
-            <h1 class="text-4xl font-bold opacity-90">{{ dados_jogador.name }}</h1>
-            <div class="mt-4 text-5xl font-extrabold tracking-tight mb-3">
-                R$ {{ dados_jogador.saldo | format_brl }}
-            </div>
-            <div class="text-1xl font-bold tracking-tight mb-3 opacity-90">
-                Conta Poupança: R$ {{ dados_jogador.poupanca | format_brl }}
+        <div class="relative z-10">
+            <p class="text-[10px] font-black opacity-70 uppercase mb-1 tracking-widest">Saldo em Conta Corrente</p>
+            <h1 class="text-5xl font-black tracking-tighter mb-4 font-mono">
+                <span class="text-2xl opacity-50">R$</span> {{ dados_jogador.saldo | format_brl }}
+            </h1>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center font-black" style="color: {{ dados_jogador.color }}">
+                    {{ dados_jogador.name[0].upper() }}
+                </div>
+                <p class="text-lg font-bold opacity-90">{{ dados_jogador.name }}</p>
             </div>
         </div>
     </header>
 
-    <div class="grid md:grid-cols-2 gap-8">
+    <div class="bg-indigo-900 text-white p-5 rounded-2xl mb-8 shadow-lg flex justify-between items-center border-l-8 border-indigo-400">
         <div>
-            <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">💵 Conta Corrente</h2>
-
-            <h3 class="text-lg font-bold text-gray-800 mb-3">PIX</h3>
-            <div class="p-5 rounded-xl bg-red-50 border border-red-300 shadow-md mb-8">
-                <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4">
-                    <input type="hidden" name="remetente_id" value="{{ player_id }}"> <select id="recebedor" name="recebedor_id" required class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-red focus:border-monopoly-red bg-white text-gray-700">
-                        <option value="">Selecione o Destinatário</option>
-                        {% for dest_id, dest_name in destinatarios %}
-                            <option value="{{ dest_id }}">{{ dest_name }}</option>
-                        {% endfor %}
-                    </select>
-                    
-                    <input type="number" name="valor" required min="1" placeholder="Valor a Pagar (R$)"
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-monopoly-red focus:border-monopoly-red text-lg font-mono">
-                        
-                    <button type="submit" 
-                            class="w-full h-12 bg-monopoly-red hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2">
-                        <span class="icon-pay text-lg"></span> CONFIRMAR PAGAMENTO
-                    </button>
-                </form>
-            </div>
-
-            <h3 class="text-lg font-bold text-gray-800 mb-3">Criar Cobrança Parcelada</h3>
-            <div class="p-5 rounded-xl bg-gray-100 border border-gray-300 shadow-md mb-10">
-                <form method="POST" action="{{ url_for('criar_cobranca_parcelada', credor_id=player_id) }}" class="space-y-4">
-                    
-                    <label for="devedor_id" class="block text-sm font-medium text-gray-700">Cobrar de:</label>
-                    <select id="devedor_id" name="devedor_id" required class="w-full px-4 py-3 border rounded-lg focus:ring-red-500 focus:border-red-500 bg-white text-gray-700">
-                        <option value="">Selecione o Devedor</option>
-                        {% for dest_id, dest_name in destinatarios %}
-                            {% if dest_id != 'Banco' %} <option value="{{ dest_id }}">{{ dest_name }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-
-                    <input type="number" name="valor_total" required min="1" placeholder="Valor Total da Dívida (R$)"
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-red-500 focus:border-red-500 text-lg font-mono">
-                    
-                    <label for="num_parcelas" class="block text-sm font-medium text-gray-700">Nº de Parcelas (Máx. 12):</label>
-                    <input type="number" id="num_parcelas" name="num_parcelas" required min="1" max="12" placeholder="Ex: 6"
-                        class="w-full px-4 py-3 border rounded-lg focus:ring-red-500 focus:border-red-500 text-lg font-mono">
-                    
-                    <button type="submit" class="w-full h-12 bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-lg">
-                        CRIAR COBRANÇA PARCELADA
-                    </button>
-                </form>
-            </div>
+            <p class="text-[9px] font-black opacity-60 uppercase">Reserva de Emergência</p>
+            <p class="text-xl font-black font-mono">R$ {{ dados_jogador.poupanca | format_brl }}</p>
         </div>
-
-        <div>
-            <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">💰 Conta Poupança</h2>
-            <div class="p-5 rounded-xl bg-indigo-50 border border-indigo-300 shadow-md mb-10">                
-                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-1">
-                    <input type="hidden" name="action" value="investir">
-                    <label for="investir_valor" class="block text-sm font-medium text-gray-700">Investir:</label>
-                    <div class="flex gap-2">
-                        <input type="number" id="investir_valor" name="valor" required min="1" placeholder="Valor a investir (R$)"
-                            class="flex-1 px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-lg font-mono">
-                        <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex-shrink-0">
-                            INVESTIR
-                        </button>
-                    </div>
-                </form>
-
-                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-3 border-t mt-4">
-                    <input type="hidden" name="action" value="resgatar">
-                    <label for="resgatar_valor" class="block text-sm font-medium text-gray-700">Resgatar investimento:</label>
-                    
-                    {% if partida.Banco.poupanca_trancada %}
-                        <p class="text-sm text-red-600 font-bold">Resgate Bloqueado pelo Banco Central!</p>
-                    {% else %}
-                        <div class="flex gap-2">
-                            <input type="number" id="resgatar_valor" name="valor" required min="1" placeholder="Valor a resgatar (R$)"
-                                class="flex-1 px-4 py-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-lg font-mono">
-                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex-shrink-0">
-                                RESGATAR
-                            </button>
-                        </div>
-                    {% endif %}
-                </form>
-            </div>
-            {% set minhas_dividas_items = COBRANCAS_PARCELADAS.items() | selectattr('1.devedor_id', 'equalto', player_id) | list %}
-            {% if minhas_dividas_items %}
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">📉 Dívidas Parceladas Pendentes</h2>
-                <div class="space-y-4 mb-10">
-                    {% for installment_id, cobranca in minhas_dividas_items %}
-                        {% set total = cobranca.num_parcelas_total %}
-                        {% set pagas = cobranca.num_parcelas_pagas %}
-                        {% set restante = total - pagas %}
-                        {% set valor_parcela = cobranca.valor_primeira_parcela if pagas == 0 else cobranca.valor_outras_parcelas %}
-                        
-                        <div class="bg-red-50 p-4 rounded-xl border border-red-300 shadow-md flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-lg text-red-700">Dívida de R$ {{ cobranca.valor_total | format_brl }}</h3>
-                                <p class="text-sm text-gray-700">Para: <strong>{{ partida[cobranca.credor_id].name }}</strong></p>
-                                <p class="text-sm text-gray-500 mt-1">Próximo Pagamento: <strong>R$ {{ valor_parcela | format_brl }}</strong></p>
-                            </div>
-                            
-                            <form method="POST" action="{{ url_for('pagar_cobranca_parcelada', devedor_id=player_id, installment_id=installment_id) }}" class="flex-shrink-0">
-                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-lg text-sm">
-                                    Pagar Parcela ({{ pagas + 1 }}/{{ total }})
-                                </button>
-                            </form>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            {% set minhas_receitas_items = COBRANCAS_PARCELADAS.items() | selectattr('1.credor_id', 'equalto', player_id) | list %}
-            {% if minhas_receitas_items %}
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">📈 Receitas Parceladas Pendentes</h2>
-                <div class="space-y-4 mb-10">
-                    {% for installment_id, cobranca in minhas_receitas_items %}
-                        {% set total = cobranca.num_parcelas_total %}
-                        {% set pagas = cobranca.num_parcelas_pagas %}
-                        {% set restante = total - pagas %}
-                        {% set valor_parcela = cobranca.valor_primeira_parcela if pagas == 0 else cobranca.valor_outras_parcelas %}
-                        
-                        <div class="bg-green-50 p-4 rounded-xl border border-green-300 shadow-md flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-lg text-green-700">Receber R$ {{ cobranca.valor_total | format_brl }}</h3>
-                                <p class="text-sm text-gray-700">De: <strong>{{ partida[cobranca.devedor_id].name }}</strong></p>
-                                <p class="text-sm text-gray-500 mt-1">Próxima Receita: <strong>R$ {{ valor_parcela | format_brl }}</strong></p>
-                            </div>
-                            
-                            <div class="flex-shrink-0 text-right">
-                                <span class="text-sm text-green-600 font-bold block">Aguardando Pagamento</span>
-                                <span class="text-xs text-gray-500">{{ restante }}/{{ total }} parcelas restantes</span>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        <div class="text-right">
+            <span class="text-[9px] block font-black opacity-60 uppercase">Rendimento</span>
+            <span class="text-xs font-bold text-green-400">+ Variável</span>
         </div>
     </div>
 
     {% if LEILAO_ATUAL.get('ativo') %} 
-    <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-8">🔨 Leilão de Propriedades</h2>
-        {% set leilao = LEILAO_ATUAL %}
-        <div class="bg-yellow-100 p-5 rounded-xl border border-yellow-300 shadow-md mb-10">
-            <h3 class="text-xl font-bold text-gray-800 mb-3">Leilão Ativo: {{ leilao.propriedade }}</h3>
-            <p class="text-lg">
-                Lance Atual: 
-                <strong class="text-red-600">R$ {{ leilao.lance_atual | format_brl }}</strong>
-            </p>
-            <p class="text-md mb-4">
-                Líder: 
-                <strong class="text-monopoly-dark">
-                    {% if leilao.jogador_atual_id == player_id %}
-                        Você!
-                    {% else %}
-                        {{ leilao.jogador_atual_nome or 'Ninguém' }}
-                    {% endif %}
-                </strong>
-            </p>
+        <div class="bg-yellow-400 p-6 rounded-3xl shadow-xl border-4 border-black mb-8 animate-bounce">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">🔨</span>
+                <h3 class="font-black text-black uppercase text-sm italic">LEILÃO EM CURSO!</h3>
+            </div>
+            <p class="text-black font-bold mb-4">Item: {{ LEILAO_ATUAL.propriedade }}</p>
             
-            <form method="POST" action="{{ url_for('dar_lance', player_id=player_id) }}" class="space-y-3 pt-3 border-t">
-                <input type="number" 
-                    name="lance" 
-                    required 
-                    min="{{ leilao.lance_atual + 1 }}" 
-                    max="{{ dados_jogador.saldo }}"  placeholder="Seu Lance (Máx: R$ {{ dados_jogador.saldo | format_brl }})" 
-                    class="w-full px-4 py-3 border rounded-lg focus:ring-red-500 focus:border-red-500">
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
-                    DAR LANCE
+            <form method="POST" action="{{ url_for('dar_lance', player_id=player_id) }}" class="space-y-3">
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-black/30">R$</span>
+                    <input type="number" name="lance" required min="{{ LEILAO_ATUAL.lance_atual + 1 }}" max="{{ dados_jogador.saldo }}" 
+                        placeholder="Seu lance..." 
+                        class="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 border-black font-black text-xl outline-none focus:ring-4 ring-yellow-200 text-black">
+                </div>
+                <button type="submit" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform uppercase italic">
+                    CONFIRMAR LANCE
                 </button>
             </form>
         </div>
     {% endif %}
 
-    {% macro player_styled_name(player_id, player_name) %}
-        {% if player_id == 'Banco' %}
-            <strong class="text-monopoly-dark">🏦 Banco</strong>
-        {% else %}
-            <strong style="color: {{ partida.get(player_id, {}).get('color', '#000000') }}">{{ player_name }}</strong>
-        {% endif %}
-    {% endmacro %}
+    <div class="space-y-6">
+        
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Transferência Instantânea (PIX)</h2>
+            <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4">
+                <input type="hidden" name="remetente_id" value="{{ player_id }}">
+                <select name="recebedor_id" required class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-bold focus:border-red-400 outline-none appearance-none">
+                    <option value="">Para quem?</option>
+                    {% for dest_id, dest_name in destinatarios %}
+                        <option value="{{ dest_id }}">{{ dest_name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" name="valor" required min="1" placeholder="Quanto? (R$)"
+                    class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-black text-2xl font-mono focus:border-red-400 outline-none">
+                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-red-100 transition-all uppercase italic">
+                    ENVIAR PIX ⚡
+                </button>
+            </form>
+        </section>
 
-    <div class="pt-2">
-        <h2 class="text-xl font-bold text-gray-800 mb-6 border-t pt-2">📜 Extrato Recente</h2>
-        <div class="space-y-4">
-            {% for t in historico %}
-                {% set is_incoming = t.recebedor_id == player_id %}
-                {% set other_party_id = t.remetente_id if is_incoming else t.recebedor_id %}
-                {% set other_party_name = id_to_name.get(other_party_id, 'Desconhecido') %}
-                {% set valor_display = t.valor | format_brl %}
-                
-                <div class="bg-gray-50 p-4 rounded-xl shadow-sm flex justify-between items-center border border-gray-200 hover:bg-gray-100 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center {{ 'bg-monopoly-green/70 text-green-700' if is_incoming else 'bg-red-100 text-red-600' }}">
-                            <span class="{{ 'icon-receive' if is_incoming else 'icon-pay' }} text-lg"></span>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-900">
-                                {% if is_incoming %}
-                                    Recebido de 
-                                    {{ player_styled_name(t.remetente_id, other_party_name) }}
-                                {% else %}
-                                    Pago para 
-                                    {{ player_styled_name(t.recebedor_id, other_party_name) }}
-                                {% endif %}
-                            </p>
-                            <p class="text-xs text-gray-500">Transação ID #{{ t.id }}</p>
-                        </div>
+        <section class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+            <h2 class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-4">Gestão de Investimento</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-3">
+                    <input type="hidden" name="action" value="investir">
+                    <div class="flex gap-2">
+                        <input type="number" name="valor" required min="1" placeholder="Investir (R$)" class="flex-1 p-4 bg-white rounded-2xl font-bold border-2 border-transparent focus:border-indigo-400 outline-none">
+                        <button type="submit" class="bg-indigo-600 text-white px-6 rounded-2xl font-black">IN</button>
                     </div>
-                    <div class="text-xl font-bold {{ 'text-green-700' if is_incoming else 'text-red-600' }}">
-                        {{ '+' if is_incoming else '-' }}R$ {{ valor_display }}
+                </form>
+
+                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-3">
+                    <input type="hidden" name="action" value="resgatar">
+                    {% if partida.Banco.poupanca_trancada %}
+                        <div class="p-4 bg-red-100 text-red-700 rounded-2xl text-[10px] font-black text-center uppercase">Resgate Bloqueado pelo Banco</div>
+                    {% else %}
+                        <div class="flex gap-2">
+                            <input type="number" name="valor" required min="1" placeholder="Resgatar (R$)" class="flex-1 p-4 bg-white rounded-2xl font-bold border-2 border-transparent focus:border-green-400 outline-none">
+                            <button type="submit" class="bg-green-600 text-white px-6 rounded-2xl font-black">OUT</button>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </section>
+
+        {% if minhas_dividas_items %}
+        <section class="bg-red-50 p-6 rounded-3xl border border-red-100">
+            <h2 class="text-xs font-black text-red-400 uppercase tracking-widest mb-4">Dívidas Ativas</h2>
+            <div class="space-y-3">
+                {% for installment_id, cobranca in minhas_dividas_items %}
+                    <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-red-200">
+                        <div class="text-xs">
+                            <p class="font-black text-red-600 uppercase">R$ {{ cobranca.valor_total | format_brl }}</p>
+                            <p class="text-gray-400 font-bold">Credor: {{ partida[cobranca.credor_id].name }}</p>
+                        </div>
+                        <form method="POST" action="{{ url_for('pagar_cobranca_parcelada', devedor_id=player_id, installment_id=installment_id) }}">
+                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Pagar</button>
+                        </form>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <section>
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Últimos Movimentos</h2>
+            <div class="space-y-2">
+                {% for t in historico %}
+                    {% set is_incoming = t.recebedor_id == player_id %}
+                    <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-gray-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg {{ 'bg-green-100 text-green-600' if is_incoming else 'bg-red-100 text-red-600' }}">
+                                {{ '⬆️' if is_incoming else '⬇️' }}
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-black text-gray-800 uppercase leading-none">
+                                    {{ id_to_name.get(t.remetente_id if is_incoming else t.recebedor_id, 'Desconhecido') }}
+                                </p>
+                                <p class="text-[8px] font-bold text-gray-400 mt-1 uppercase">ID #{{ t.id }}</p>
+                            </div>
+                        </div>
+                        <p class="font-mono font-black text-sm {{ 'text-green-600' if is_incoming else 'text-red-600' }}">
+                            {{ '+' if is_incoming else '-' }}R$ {{ t.valor | format_brl }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
     </div>
 </div>
 {% endblock %}
