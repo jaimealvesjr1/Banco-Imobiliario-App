@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import uuid 
+import uuid
+import time
 import random 
 import json 
 import os
@@ -25,6 +26,21 @@ BANK_PIN = "2525"
 LEILAO_ATUAL = {}
 COBRANCAS_PARCELADAS = {}
 SALDO_INICIAL = 500000
+
+def verificar_encerramento_leilao():
+    global LEILAO_ATUAL
+    if LEILAO_ATUAL.get('ativo') and time.time() > LEILAO_ATUAL.get('expira_em', 0):
+        vencedor_id = LEILAO_ATUAL.get('jogador_atual_id')
+        valor_final = LEILAO_ATUAL.get('lance_atual')
+        propriedade = LEILAO_ATUAL.get('propriedade')
+
+        if vencedor_id:
+            mensagem = executar_transacao(vencedor_id, 'Banco', valor_final)
+            if "Erro" not in mensagem:
+                flash(f"MARTELO BATIDO! {PARTIDA[vencedor_id]['name']} comprou {propriedade} por R$ {format_brl(valor_final)}!", 'success')
+        
+        LEILAO_ATUAL = {}
+        save_game_state()
 
 @app.route('/banco_login', methods=['GET', 'POST'])
 def banco_login():
@@ -504,6 +520,7 @@ def transacao_unificada():
 @app.route('/leilao/iniciar', methods=['POST'])
 def iniciar_leilao():
     global LEILAO_ATUAL
+    tempo_segundos = 90
     
     # 1. Verificação de Pré-condição
     if LEILAO_ATUAL.get('ativo', False):
@@ -526,8 +543,9 @@ def iniciar_leilao():
         'propriedade': propriedade,
         'lance_minimo': lance_inicial,
         'lance_atual': lance_inicial,
-        'jogador_atual_id': None, # ID do jogador com o lance mais alto
+        'jogador_atual_id': None,
         'jogador_atual_nome': None,
+        'expira_em': time.time() + tempo_segundos
     }
     save_game_state()
     flash(f"Leilão da propriedade '{propriedade}' iniciado com lance inicial de R$ {format_brl(lance_inicial)}!", 'success')
@@ -538,41 +556,49 @@ def iniciar_leilao():
 def dar_lance(player_id):
     global LEILAO_ATUAL
     
-    if not LEILAO_ATUAL.get('ativo', False):
-        flash("Erro: Não há leilão ativo para dar lances.", 'error')
+    if LEILAO_ATUAL.get('ativo') and time.time() > LEILAO_ATUAL.get('expira_em', 0):
+        verificar_encerramento_leilao()
+        flash("Erro: O leilão encerrou enquanto você digitava!", 'error')
+        return redirect(url_for('pagina_jogador', player_id=player_id))
+    
+    if not LEILAO_ATUAL.get('ativo', False) or time.time() > LEILAO_ATUAL.get('expira_em', 0):
+        verificar_encerramento_leilao() 
+        flash("Erro: O leilão já foi encerrado.", 'error')
         return redirect(url_for('pagina_jogador', player_id=player_id))
         
-    novo_lance = request.form['lance']
-    
     try:
-        novo_lance = int(novo_lance)
+        novo_lance = int(request.form['lance'])
         
-        # 🌟 NOVA ORDEM DE VERIFICAÇÃO 🌟
-
-        # 1. Verificar Saldo Mínimo na Conta Corrente
         saldo_jogador = PARTIDA[player_id]['saldo']
         if saldo_jogador < novo_lance:
-            # Note: Usamos format_brl para a mensagem de erro
-            flash(f"Erro: Saldo R$ {format_brl(saldo_jogador)} insuficiente para cobrir o lance de R$ {format_brl(novo_lance)}.", 'error')
+            flash(f"Erro: Saldo R$ {format_brl(saldo_jogador)} insuficiente para cobrir o lance.", 'error')
             return redirect(url_for('pagina_jogador', player_id=player_id))
 
-        # 2. Verificar o Lance Mínimo (deve ser maior que o lance atual)
         if novo_lance <= LEILAO_ATUAL['lance_atual']:
-            flash(f"Erro: O lance deve ser maior que o lance atual (R$ {format_brl(LEILAO_ATUAL['lance_atual'])}).", 'error')
+            flash(f"Erro: Seu lance deve ser maior que R$ {format_brl(LEILAO_ATUAL['lance_atual'])}.", 'error')
             return redirect(url_for('pagina_jogador', player_id=player_id))
         
     except ValueError:
         flash("Erro: O lance deve ser um número inteiro.", 'error')
         return redirect(url_for('pagina_jogador', player_id=player_id))
 
-    # 3. Atualizar o Leilão
-    jogador_nome = PARTIDA[player_id]['name']
+    novo_registro = {
+        'nome': PARTIDA[player_id]['name'],
+        'valor': novo_lance
+    }
+    
+    historico = LEILAO_ATUAL.get('ultimos_lances', [])
+    historico.insert(0, novo_registro)
+    LEILAO_ATUAL['ultimos_lances'] = historico[:3]
+
     LEILAO_ATUAL['lance_atual'] = novo_lance
     LEILAO_ATUAL['jogador_atual_id'] = player_id
-    LEILAO_ATUAL['jogador_atual_nome'] = jogador_nome
+    LEILAO_ATUAL['jogador_atual_nome'] = PARTIDA[player_id]['name']
+    LEILAO_ATUAL['expira_em'] = time.time() + 30
+    
     save_game_state()
     
-    flash(f"Novo lance de R$ {format_brl(novo_lance)} dado por {jogador_nome}!", 'success')
+    flash(f"Sucesso! Você lidera o leilão com R$ {format_brl(novo_lance)}.", 'success')
     return redirect(url_for('pagina_jogador', player_id=player_id))
 
 @app.route('/leilao/finalizar', methods=['POST'])
@@ -699,6 +725,7 @@ def jogador_auth(player_id):
 
 @app.route('/jogador/<player_id>')
 def pagina_jogador(player_id):
+    verificar_encerramento_leilao()
     if not session.get(f'auth_{player_id}'):
         return redirect(url_for('jogador_auth', player_id=player_id))
     

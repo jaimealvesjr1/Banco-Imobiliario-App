@@ -8,7 +8,7 @@
         {% if messages %}
             <div class="mb-6 space-y-2">
                 {% for category, message in messages %}
-                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 shadow-sm
+                    <div class="flex items-center gap-3 p-4 rounded-xl border-2 shadow-sm animate-pulse
                         {% if category == 'error' or category == 'warning' %}
                             bg-red-50 text-red-700 border-red-200
                         {% else %}
@@ -26,42 +26,46 @@
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
                 <div class="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
-                    <span class="text-4xl">🏦</span>
+                    <span class="text-4xl">🏛️</span>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight italic">BANCO CENTRAL</h1>
-                    <p class="text-monopoly-blue text-xs font-bold tracking-widest uppercase">Autoridade Monetária da Partida</p>
+                    <h1 class="text-3xl font-black tracking-tight italic uppercase">Banco Central</h1>
+                    <p class="text-monopoly-blue text-[10px] font-bold tracking-widest uppercase opacity-80">Gestão de Liquidez e Ativos</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <a href="{{ url_for('dashboard') }}" class="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold transition-all border border-white/20">Menu Geral</a>
-                <a href="{{ url_for('banco_logout') }}" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full text-sm font-black shadow-lg">ENCERRAR 🔒</a>
+                <a href="{{ url_for('dashboard') }}" class="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold transition-all border border-white/20 uppercase">Menu</a>
+                <a href="{{ url_for('banco_logout') }}" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full text-xs font-black shadow-lg uppercase">Sair 🔒</a>
             </div>
         </div>
     </header>
 
     <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {% for player_id, data in jogadores_data.items() %}
-            <div class="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-gray-100 hover:shadow-xl transition-all group flex flex-col h-full">
-                <div class="h-2 w-full flex-shrink-0" style="background-color: {{ data.color }}"></div>
+            <div class="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-gray-100 group flex flex-col h-full hover:border-monopoly-blue transition-colors">
+                <div class="h-1.5 w-full" style="background-color: {{ data.color }}"></div>
                 <div class="p-4 flex flex-col justify-between flex-grow">
-                    <div>
+                    <div class="mb-4">
                         <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-black text-gray-800 uppercase text-[10px] leading-tight truncate mr-2" title="{{ data.name }}">
-                                {{ data.name }}
-                            </h3>
-                            <form method="POST" action="{{ url_for('reset_pin', player_id=player_id) }}" class="flex-shrink-0">
-                                <button type="submit" title="Resetar PIN" class="text-gray-300 hover:text-yellow-600 transition-colors">🔑</button>
+                            <h3 class="font-black text-gray-800 uppercase text-[10px] truncate" title="{{ data.name }}">{{ data.name }}</h3>
+                            <form method="POST" action="{{ url_for('reset_pin', player_id=player_id) }}">
+                                <button type="submit" title="Resetar PIN" class="text-gray-200 hover:text-yellow-500 transition-colors">🔑</button>
                             </form>
                         </div>
                         <div class="space-y-1">
-                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Saldo</p>
+                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Saldo em Conta</p>
                             <p class="text-lg font-black text-gray-900 font-mono leading-none">R$ {{ data.saldo | format_brl }}</p>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 border-t border-gray-50 flex justify-between items-center">
-                        <span class="text-[8px] font-black text-indigo-400 uppercase">Poupança</span>
-                        <span class="font-mono font-bold text-indigo-700 text-xs text-right">R$ {{ data.poupanca | format_brl }}</span>
+                    <div class="pt-3 border-t border-gray-50 flex justify-between items-center">
+                        <div class="text-left">
+                            <p class="text-[7px] font-black text-indigo-400 uppercase">Poupança</p>
+                            <p class="font-mono font-bold text-indigo-700 text-[10px]">R$ {{ data.poupanca | format_brl }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[7px] font-black text-gray-400 uppercase">Total</p>
+                            <p class="font-mono font-black text-gray-800 text-[10px]">R$ {{ (data.saldo + data.poupanca) | format_brl }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -69,61 +73,54 @@
     </section>
 
     <div class="grid lg:grid-cols-3 gap-8">
-        
         <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
             <div class="flex items-center gap-2 mb-6">
                 <span class="text-2xl">💸</span>
-                <h2 class="text-xl font-black text-gray-800">Transferências</h2>
+                <h2 class="text-xl font-black text-gray-800 uppercase italic">Transações</h2>
             </div>
             
             <form method="POST" action="{{ url_for('transacao_unificada') }}" class="space-y-6">
                 <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Destinatário ou Grupo</label>
-                    <select name="target_id" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-bold focus:border-monopoly-blue outline-none transition-all">
-                        <option value="">Selecione o Alvo</option>
-                        <optgroup label="Jogadores Individuais">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Alvo da Operação</label>
+                    <select name="target_id" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-bold focus:border-monopoly-blue outline-none transition-all appearance-none">
+                        <option value="">Selecione...</option>
+                        <optgroup label="Individuais">
                             {% for player_id, data in jogadores_data.items() %}
                                 <option value="{{ player_id }}">{{ data.name }}</option>
                             {% endfor %}
                         </optgroup>
-                        <optgroup label="Ações Coletivas">
-                            <option value="Todos" class="font-black text-monopoly-blue">TODOS OS JOGADORES</option>
+                        <optgroup label="Coletivas">
+                            <option value="Todos" class="font-black text-indigo-600">TODOS OS JOGADORES</option>
                         </optgroup>
                     </select>
                 </div>
 
-                <div class="bg-gray-50 p-3 rounded-xl flex justify-around gap-2">
-                    <label class="flex-1 cursor-pointer">
+                <div class="bg-gray-100 p-2 rounded-xl flex gap-1">
+                    <label class="flex-1">
                         <input type="radio" name="value_type" value="FIXO" checked onclick="toggleAdj(true)" class="hidden peer">
-                        <div class="text-center p-2 rounded-lg text-xs font-black peer-checked:bg-monopoly-dark peer-checked:text-white text-gray-400 transition-all uppercase">Dinheiro (R$)</div>
+                        <div class="text-center py-2 rounded-lg text-[10px] font-black peer-checked:bg-white peer-checked:shadow-sm text-gray-400 peer-checked:text-monopoly-dark cursor-pointer transition-all uppercase">Dinheiro</div>
                     </label>
-                    <label class="flex-1 cursor-pointer">
+                    <label class="flex-1">
                         <input type="radio" name="value_type" value="PCT" onclick="toggleAdj(false)" class="hidden peer">
-                        <div class="text-center p-2 rounded-lg text-xs font-black peer-checked:bg-monopoly-dark peer-checked:text-white text-gray-400 transition-all uppercase">Percent (%)</div>
+                        <div class="text-center py-2 rounded-lg text-[10px] font-black peer-checked:bg-white peer-checked:shadow-sm text-gray-400 peer-checked:text-monopoly-dark cursor-pointer transition-all uppercase">Porcentagem</div>
                     </label>
                 </div>
 
                 <div class="space-y-4">
                     <div id="valor_container">
-                        <label id="valor_label" class="block text-[10px] font-black text-gray-400 uppercase mb-1">Valor Base (R$)</label>
-                        <input type="number" name="valor" id="valor_input" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-mono text-xl font-black" placeholder="0">
+                        <label id="valor_label" class="block text-[10px] font-black text-gray-400 uppercase mb-1">Valor Nominal (R$)</label>
+                        <input type="number" name="valor" id="valor_input" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-mono text-2xl font-black" placeholder="0">
                     </div>
 
                     <div id="ajuste_container" class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                        <label class="block text-[10px] font-black text-blue-800 uppercase mb-1">Ajuste Dinâmico (%)</label>
-                        <input type="number" name="ajuste_pct" id="ajuste_pct" value="0" class="w-full bg-transparent font-mono text-xl font-black text-blue-900 outline-none" placeholder="0">
+                        <label class="block text-[10px] font-black text-blue-800 uppercase mb-1">Ajuste de Taxa (%)</label>
+                        <input type="number" name="ajuste_pct" id="ajuste_pct" value="0" class="w-full bg-transparent font-mono text-2xl font-black text-blue-900 outline-none" placeholder="0">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 pt-4">
-                    <button type="submit" name="action_type_final" value="COBRAR" class="group relative overflow-hidden bg-red-600 p-4 rounded-2xl font-black text-white shadow-lg hover:shadow-red-300 transition-all">
-                        <span class="relative z-10">DEBITAR</span>
-                        <div class="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                    </button>
-                    <button type="submit" name="action_type_final" value="PAGAR" class="group relative overflow-hidden bg-green-600 p-4 rounded-2xl font-black text-white shadow-lg hover:shadow-green-200 transition-all">
-                        <span class="relative z-10">CREDITAR</span>
-                        <div class="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
-                    </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <button type="submit" name="action_type_final" value="COBRAR" class="bg-red-600 p-4 rounded-2xl font-black text-white shadow-lg hover:bg-red-700 active:scale-95 transition-all uppercase italic text-xs">Debitar ⬇️</button>
+                    <button type="submit" name="action_type_final" value="PAGAR" class="bg-green-600 p-4 rounded-2xl font-black text-white shadow-lg hover:bg-green-700 active:scale-95 transition-all uppercase italic text-xs">Creditar ⬆️</button>
                 </div>
             </form>
         </div>
@@ -132,34 +129,34 @@
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-2">
                     <span class="text-2xl">💰</span>
-                    <h2 class="text-xl font-black text-gray-800">Poupança</h2>
+                    <h2 class="text-xl font-black text-gray-800 uppercase italic">Poupança</h2>
                 </div>
                 {% if partida.Banco.poupanca_trancada %}
-                    <span class="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black rounded-full uppercase tracking-tighter">Congelada ❄️</span>
+                    <span class="px-3 py-1 bg-red-100 text-red-700 text-[9px] font-black rounded-full uppercase">Congelada</span>
                 {% else %}
-                    <span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase tracking-tighter">Liberada 🔓</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 text-[9px] font-black rounded-full uppercase">Liberada</span>
                 {% endif %}
             </div>
 
             <form method="POST" action="{{ url_for('controle_poupanca') }}" class="space-y-6 flex-1 flex flex-col justify-between">
                 <button type="submit" name="action" value="{{ 'destrancar' if partida.Banco.poupanca_trancada else 'trancar' }}" 
-                    class="w-full py-4 rounded-2xl font-black text-white transition-all shadow-md
-                    {{ 'bg-green-500 hover:bg-green-600 shadow-green-100' if partida.Banco.poupanca_trancada else 'bg-red-500 hover:bg-red-600 shadow-red-100' }}">
-                    {{ 'DESCONGELAR POUPANÇA' if partida.Banco.poupanca_trancada else 'CONGELAR RESGATES' }}
+                    class="w-full py-4 rounded-2xl font-black text-white transition-all shadow-md text-xs
+                    {{ 'bg-green-500 hover:bg-green-600' if partida.Banco.poupanca_trancada else 'bg-red-500 hover:bg-red-600' }}">
+                    {{ 'DESBLOQUEAR SISTEMA' if partida.Banco.poupanca_trancada else 'BLOQUEAR RESGATES' }}
                 </button>
 
                 {% if partida.Banco.poupanca_trancada %}
                 <div class="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-100 border-dashed">
-                    <label class="block text-[10px] font-black text-indigo-900 uppercase mb-3 text-center">Aplicar Juros/Rendimento Global</label>
-                    <div class="flex items-center gap-2">
-                        <input type="number" name="percentual_render" step="0.01" min="-100" max="100" required class="flex-1 bg-white p-4 rounded-xl border-2 border-indigo-200 font-mono text-xl font-black outline-none focus:border-indigo-500" placeholder="0.00">
+                    <label class="block text-[9px] font-black text-indigo-900 uppercase mb-3 text-center">Rendimento Global de Juros</label>
+                    <div class="flex items-center gap-2 mb-4">
+                        <input type="number" name="percentual_render" step="0.01" min="-100" max="100" required class="flex-1 bg-white p-4 rounded-xl border-2 border-indigo-200 font-mono text-2xl font-black outline-none focus:border-indigo-500" placeholder="0.00">
                         <span class="text-2xl font-black text-indigo-300">%</span>
                     </div>
-                    <button type="submit" name="action" value="render" class="w-full mt-4 bg-indigo-600 text-white py-4 rounded-xl font-black hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">EXECUTAR RENDIMENTO</button>
+                    <button type="submit" name="action" value="render" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black hover:bg-indigo-700 transition-all text-xs uppercase italic">Aplicar Rendimento</button>
                 </div>
                 {% else %}
-                <div class="flex-1 flex items-center justify-center p-6 text-center text-gray-300 italic text-sm">
-                    Tranque a poupança para aplicar rendimentos globais.
+                <div class="flex-1 flex items-center justify-center p-6 text-center text-gray-300 italic text-xs">
+                    Bloqueie os resgates para realizar a aplicação de rendimentos globais.
                 </div>
                 {% endif %}
             </form>
@@ -168,39 +165,38 @@
         <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
             <div class="flex items-center gap-2 mb-6">
                 <span class="text-2xl">🔨</span>
-                <h2 class="text-xl font-black text-gray-800">Leilão Ativo</h2>
+                <h2 class="text-xl font-black text-gray-800 uppercase italic">Leilão</h2>
             </div>
             
             {% if LEILAO_ATUAL.ativo %}
                 <div class="bg-yellow-50 rounded-2xl p-6 border-2 border-yellow-200 border-dashed text-center">
-                    <p class="text-[10px] font-black text-yellow-800 uppercase tracking-widest mb-1">Propriedade em Disputa</p>
+                    <p class="text-[9px] font-black text-yellow-800 uppercase tracking-widest mb-1">Item em Disputa</p>
                     <h4 class="text-2xl font-black text-gray-800 mb-6 italic">"{{ LEILAO_ATUAL.propriedade }}"</h4>
                     
                     <div class="bg-white p-4 rounded-xl shadow-sm mb-6">
-                        <p class="text-[10px] font-black text-red-400 uppercase mb-1">Lance mais alto</p>
-                        <p class="text-3xl font-black text-red-600 font-mono">R$ {{ LEILAO_ATUAL.lance_atual | format_brl }}</p>
-                        <p class="text-xs font-bold text-gray-500 mt-2">Dono do Lance: <span class="text-monopoly-dark">{{ LEILAO_ATUAL.jogador_atual_nome or '---' }}</span></p>
+                        <p class="text-[9px] font-black text-red-400 uppercase mb-1">Lance Atual</p>
+                        <p class="text-3xl font-black text-red-600 font-mono leading-none">R$ {{ LEILAO_ATUAL.lance_atual | format_brl }}</p>
+                        <p class="text-[10px] font-bold text-gray-500 mt-3">Líder: <span class="text-monopoly-dark font-black uppercase">{{ LEILAO_ATUAL.jogador_atual_nome or '---' }}</span></p>
                     </div>
 
                     <form method="POST" action="{{ url_for('finalizar_leilao') }}">
-                        <button type="submit" class="w-full bg-monopoly-dark text-white font-black py-4 rounded-xl hover:bg-black transition-all shadow-xl active:scale-95">BATER O MARTELO 🔨</button>
+                        <button type="submit" class="w-full bg-monopoly-dark text-white font-black py-4 rounded-xl hover:bg-black transition-all shadow-xl active:scale-95 uppercase italic text-xs">Finalizar e Debitar 🔨</button>
                     </form>
                 </div>
             {% else %}
                 <form method="POST" action="{{ url_for('iniciar_leilao') }}" class="space-y-4">
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Item/Propriedade</label>
-                        <input type="text" name="propriedade" required placeholder="Ex: Av. Paulista" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-bold">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-2">Item/Propriedade</label>
+                        <input type="text" name="propriedade" required placeholder="Ex: Av. Paulista" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-bold outline-none focus:border-monopoly-blue">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Preço de Reserva (R$)</label>
-                        <input type="number" name="lance_inicial" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-mono text-xl font-black">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-2">Preço Inicial (R$)</label>
+                        <input type="number" name="lance_inicial" required class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-xl font-mono text-2xl font-black outline-none focus:border-monopoly-blue">
                     </div>
-                    <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-black py-4 rounded-xl shadow-lg shadow-yellow-100 transition-all uppercase tracking-widest">Iniciar Pregão</button>
+                    <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase italic text-xs">Iniciar Pregão</button>
                 </form>
             {% endif %}
         </div>
-
     </div>
 </div>
 
@@ -213,13 +209,11 @@ function toggleAdj(isFixed) {
     if (isFixed) {
         adjContainer.style.display = 'block';
         adjContainer.style.opacity = '1';
-        valorLabel.textContent = 'Valor Base (R$)';
-        valorInput.placeholder = '0';
+        valorLabel.textContent = 'Valor Nominal (R$)';
     } else {
         adjContainer.style.display = 'none';
         adjContainer.style.opacity = '0';
-        valorLabel.textContent = 'Percentual do Saldo (%)';
-        valorInput.placeholder = 'Ex: 10';
+        valorLabel.textContent = 'Porcentagem do Saldo (%)';
     }
 }
 </script>

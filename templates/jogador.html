@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Carteira {{ dados_jogador.name }}{% endblock %}
+{% block title %}Carteira: {{ dados_jogador.name }}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto pb-20"> {% with messages = get_flashed_messages(with_categories=true) %}
+<div class="max-w-md mx-auto pb-20"> 
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="fixed top-4 left-4 right-4 z-50 space-y-2">
                 {% for category, message in messages %}
@@ -22,39 +23,21 @@
 
     <header style="background-color: {{ dados_jogador.color }}" class="relative text-white p-8 rounded-3xl mb-6 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between border-b-8 border-black/20">
         <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-        
         <div class="flex items-center justify-between relative z-10">
-            <a href="{{ url_for('logout_jogador', player_id=player_id) }}" 
-               class="px-4 py-2 bg-black/20 hover:bg-black/40 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest border border-white/10">
-               &larr; SAIR E TRAVAR
-            </a>
+            <a href="{{ url_for('logout_jogador', player_id=player_id) }}" class="px-4 py-2 bg-black/20 hover:bg-black/40 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest border border-white/10">&larr; SAIR E TRAVAR</a>
             <span class="text-[10px] font-black opacity-60 uppercase tracking-widest">Digital Bank Card</span>
         </div>
-        
         <div class="relative z-10">
-            <p class="text-[10px] font-black opacity-70 uppercase mb-1 tracking-widest">Saldo em Conta Corrente</p>
+            <p class="text-[10px] font-black opacity-70 uppercase mb-1 tracking-widest">Saldo em Conta</p>
             <h1 class="text-5xl font-black tracking-tighter mb-4 font-mono">
                 <span class="text-2xl opacity-50">R$</span> {{ dados_jogador.saldo | format_brl }}
             </h1>
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center font-black" style="color: {{ dados_jogador.color }}">
-                    {{ dados_jogador.name[0].upper() }}
-                </div>
+                <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center font-black" style="color: {{ dados_jogador.color }}">{{ dados_jogador.name[0].upper() }}</div>
                 <p class="text-lg font-bold opacity-90">{{ dados_jogador.name }}</p>
             </div>
         </div>
     </header>
-
-    <div class="bg-indigo-900 text-white p-5 rounded-2xl mb-8 shadow-lg flex justify-between items-center border-l-8 border-indigo-400">
-        <div>
-            <p class="text-[9px] font-black opacity-60 uppercase">Poupança</p>
-            <p class="text-xl font-black font-mono">R$ {{ dados_jogador.poupanca | format_brl }}</p>
-        </div>
-        <div class="text-right">
-            <span class="text-[9px] block font-black opacity-60 uppercase">Rendimento</span>
-            <span class="text-xs font-bold text-green-400">Variável</span>
-        </div>
-    </div>
 
     {% if LEILAO_ATUAL.get('ativo') %} 
         <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 p-6 rounded-3xl shadow-xl border-4 border-black mb-8 relative overflow-hidden">
@@ -65,27 +48,43 @@
                 </span>
             </div>
 
-            <div class="flex items-center gap-2 mb-4">
-                <span class="text-2xl">🔨</span>
-                <h3 class="font-black text-black uppercase text-sm italic tracking-widest">Leilão em Aberto</h3>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🔨</span>
+                    <h3 class="font-black text-black uppercase text-xs italic tracking-widest">Leilão em Aberto</h3>
+                </div>
+                <div id="countdown" class="bg-black text-yellow-400 px-4 py-1 rounded-full font-mono font-black text-xl shadow-lg">--s</div>
             </div>
 
-            <div class="mb-6 bg-white/30 p-4 rounded-2xl border border-black/10">
-                <p class="text-[10px] font-black text-black/60 uppercase mb-1">Item em disputa:</p>
-                <p class="text-xl font-black text-black truncate">"{{ LEILAO_ATUAL.propriedade }}"</p>
+            <div class="mb-6 bg-white/30 p-4 rounded-2xl border border-black/10 text-center">
+                <p class="text-[10px] font-black text-black/60 uppercase mb-1 italic">Propriedade em Disputa</p>
+                <p class="text-2xl font-black text-black truncate uppercase">"{{ LEILAO_ATUAL.propriedade }}"</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <div class="bg-black/90 p-3 rounded-2xl text-white">
-                    <p class="text-[9px] font-bold uppercase opacity-60">Lance Atual</p>
+            <div class="grid grid-cols-3 gap-2 mb-6 text-black">
+                <div class="bg-white/40 p-2 rounded-xl border border-black/5 text-center">
+                    <p class="text-[8px] font-bold uppercase opacity-60">Inicial</p>
+                    <p class="font-mono font-black text-xs">R$ {{ LEILAO_ATUAL.lance_minimo | format_brl }}</p>
+                </div>
+                <div class="bg-black/90 p-2 rounded-xl text-white text-center col-span-2 ring-2 ring-yellow-400">
+                    <p class="text-[8px] font-bold uppercase opacity-60 text-yellow-400">Lance Atual</p>
                     <p class="font-mono font-black text-lg">R$ {{ LEILAO_ATUAL.lance_atual | format_brl }}</p>
                 </div>
-                <div class="bg-white/90 p-3 rounded-2xl text-black">
-                    <p class="text-[9px] font-bold uppercase opacity-60">Líder Agora</p>
-                    <p class="font-black text-sm truncate">{{ LEILAO_ATUAL.jogador_atual_nome or 'Ninguém' }}</p>
-                </div>
             </div>
-            
+
+            <div class="mb-6 space-y-2">
+                <p class="text-[9px] font-black text-black/50 uppercase tracking-widest">Logs de Ofertas</p>
+                {% for lance in LEILAO_ATUAL.get('ultimos_lances', []) %}
+                    <div class="flex justify-between items-center bg-white/40 p-2 rounded-xl border border-black/5 {{ 'ring-2 ring-black bg-white/60' if loop.first else 'opacity-60' }}">
+                        <span class="text-[10px] font-black uppercase">{{ lance.nome }}</span>
+                        <span class="font-mono font-black text-sm text-black">R$ {{ lance.valor | format_brl }}</span>
+                    </div>
+                {% endfor %}
+                {% if not LEILAO_ATUAL.get('ultimos_lances') %}
+                    <p class="text-[10px] italic text-black/40 text-center py-2">Aguardando lances acima do valor inicial...</p>
+                {% endif %}
+            </div>
+
             <form method="POST" action="{{ url_for('dar_lance', player_id=player_id) }}" class="space-y-3">
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 font-black text-black/30">R$</span>
@@ -93,79 +92,117 @@
                         min="{{ LEILAO_ATUAL.lance_atual + 1 }}" 
                         max="{{ dados_jogador.saldo }}" 
                         placeholder="Seu lance..." 
-                        class="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 border-black font-black text-xl outline-none focus:ring-4 ring-black/10 text-black">
+                        class="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 border-black font-black text-xl outline-none focus:ring-4 ring-black/10 text-black shadow-inner">
                 </div>
                 <button type="submit" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase italic flex items-center justify-center gap-2">
-                    COBRIR LANCE ⚡
+                    LANÇAR OFERTA ⚡
                 </button>
-                <p class="text-[9px] text-center font-bold text-black/60 uppercase">Mínimo para cobrir: R$ {{ (LEILAO_ATUAL.lance_atual + 1) | format_brl }}</p>
+                <p class="text-[9px] text-center font-bold text-black/60 uppercase">Lance mínimo: R$ {{ (LEILAO_ATUAL.lance_atual + 1) | format_brl }}</p>
             </form>
         </div>
     {% endif %}
 
     <div class="space-y-6">
-        
         <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Transferência Instantânea (PIX)</h2>
-            <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4">
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Pagamento / Transferência</h2>
+            <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4" id="pixForm">
                 <input type="hidden" name="remetente_id" value="{{ player_id }}">
-                <select name="recebedor_id" required class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-bold focus:border-red-400 outline-none appearance-none">
+                <select name="recebedor_id" required class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-bold outline-none">
                     <option value="">Para quem?</option>
-                    {% for dest_id, dest_name in destinatarios %}
-                        <option value="{{ dest_id }}">{{ dest_name }}</option>
-                    {% endfor %}
+                    {% for dest_id, dest_name in destinatarios %}<option value="{{ dest_id }}">{{ dest_name }}</option>{% endfor %}
                 </select>
-                <input type="number" name="valor" required min="1" placeholder="Quanto? (R$)"
-                    class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-black text-2xl font-mono focus:border-red-400 outline-none">
-                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-red-100 transition-all uppercase italic">
-                    ENVIAR PIX ⚡
-                </button>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="text-[9px] font-black text-gray-400 uppercase ml-2">Valor Base</label>
+                        <input type="number" id="valor_base" required placeholder="Ex: 20000" class="w-full p-4 bg-gray-50 rounded-2xl border-2 border-gray-50 font-black text-xl font-mono outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase ml-2">Dados</label>
+                        <select id="multiplicador" class="w-full p-4 bg-gray-100 rounded-2xl border-2 border-transparent font-black text-xl outline-none">
+                            {% for i in range(1, 13) %}<option value="{{ i }}">x{{ i }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    {% for pct in [-20, -15, -10, -5, 5, 10, 15, 20] %}
+                    <button type="button" onclick="atualizarCalculo({{ pct }})" class="py-2 rounded-xl text-[10px] font-black border-2 border-gray-100 hover:border-red-400 hover:bg-red-50 transition-all">{{ '+' if pct > 0 }}{{ pct }}%</button>
+                    {% endfor %}
+                </div>
+                <div class="p-4 bg-gray-900 rounded-2xl border-t-4 border-red-500">
+                    <div class="flex justify-between text-[10px] font-bold text-gray-400 uppercase mb-2">
+                        <span>Cálculo Final</span>
+                        <span id="formula_display">R$ 0 x 1 (+0%)</span>
+                    </div>
+                    <div class="flex justify-between items-center text-white">
+                        <span class="font-black text-lg">TOTAL:</span>
+                        <span id="valor_final_display" class="font-mono font-black text-2xl text-red-500">R$ 0</span>
+                        <input type="hidden" name="valor" id="valor_final_input" value="0">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-red-500 text-white font-black py-5 rounded-2xl shadow-lg uppercase italic">EFETUAR PIX ⚡</button>
             </form>
         </section>
 
-        <section class="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
-            <h2 class="text-xs font-black text-indigo-400 uppercase tracking-widest mb-4">Gestão de Investimento</h2>
-            <div class="grid grid-cols-1 gap-4">
-                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-3">
-                    <input type="hidden" name="action" value="investir">
-                    <div class="flex gap-2">
-                        <input type="number" name="valor" required min="1" placeholder="Investir (R$)" class="flex-1 p-4 bg-white rounded-2xl font-bold border-2 border-transparent focus:border-indigo-400 outline-none">
-                        <button type="submit" class="bg-indigo-600 text-white px-6 rounded-2xl font-black">INVESTIR</button>
-                    </div>
-                </form>
+        <section class="space-y-4">
+            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest px-2">Engenharia de Crédito</h2>
+            
+            <div class="bg-red-50 p-6 rounded-3xl border border-red-100">
+                <h3 class="text-[10px] font-black text-red-500 uppercase mb-4">Meus Carnês (A Pagar)</h3>
+                <div class="space-y-3">
+                    {% set tem_divida = false %}
+                    {% for inst_id, cobranca in COBRANCAS_PARCELADAS.items() %}
+                        {% if cobranca.devedor_id == player_id %}
+                            {% set tem_divida = true %}
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-200 flex justify-between items-center text-xs font-bold">
+                                <div>
+                                    <p class="text-gray-800">{{ cobranca.num_parcelas_pagas }}/{{ cobranca.num_parcelas_total }}x de <span class="text-red-600">R$ {{ (cobranca.valor_primeira_parcela if cobranca.num_parcelas_pagas == 0 else cobranca.valor_outras_parcelas) | format_brl }}</span></p>
+                                    <p class="text-[8px] text-gray-400 uppercase">Para: {{ id_to_name.get(cobranca.credor_id, 'Banco') }}</p>
+                                </div>
+                                <form method="POST" action="{{ url_for('pagar_cobranca_parcelada', devedor_id=player_id, installment_id=inst_id) }}">
+                                    <button type="submit" class="bg-red-600 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase">PAGAR</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
 
-                <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-3">
-                    <input type="hidden" name="action" value="resgatar">
-                    {% if partida.Banco.poupanca_trancada %}
-                        <div class="p-4 bg-red-100 text-red-700 rounded-2xl text-[10px] font-black text-center uppercase">Resgate Bloqueado pelo Banco</div>
-                    {% else %}
-                        <div class="flex gap-2">
-                            <input type="number" name="valor" required min="1" placeholder="Resgatar (R$)" class="flex-1 p-4 bg-white rounded-2xl font-bold border-2 border-transparent focus:border-green-400 outline-none">
-                            <button type="submit" class="bg-green-600 text-white px-6 rounded-2xl font-black">OUT</button>
-                        </div>
-                    {% endif %}
+            <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
+                <h3 class="text-[10px] font-black text-blue-500 uppercase mb-4">Emitir Cobrança Parcelada</h3>
+                <form method="POST" action="{{ url_for('criar_cobranca_parcelada', credor_id=player_id) }}" class="space-y-3">
+                    <select name="devedor_id" required class="w-full p-3 bg-white rounded-xl border-2 border-transparent focus:border-blue-400 outline-none text-xs font-bold">
+                        <option value="">Devedor...</option>
+                        {% for dest_id, dest_name in destinatarios if dest_id != 'Banco' %}<option value="{{ dest_id }}">{{ dest_name }}</option>{% endfor %}
+                    </select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="valor_total" placeholder="Total R$" required class="p-3 bg-white rounded-xl border-2 border-transparent focus:border-blue-400 outline-none text-xs font-bold">
+                        <input type="number" name="num_parcelas" placeholder="Parcelas" min="1" max="12" required class="p-3 bg-white rounded-xl border-2 border-transparent focus:border-blue-400 outline-none text-xs font-bold">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all">GERAR CARNÊ</button>
                 </form>
             </div>
-        </section>
 
-        {% if minhas_dividas_items %}
-        <section class="bg-red-50 p-6 rounded-3xl border border-red-100">
-            <h2 class="text-xs font-black text-red-400 uppercase tracking-widest mb-4">Dívidas Ativas</h2>
-            <div class="space-y-3">
-                {% for installment_id, cobranca in minhas_dividas_items %}
-                    <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-red-200">
-                        <div class="text-xs">
-                            <p class="font-black text-red-600 uppercase">R$ {{ cobranca.valor_total | format_brl }}</p>
-                            <p class="text-gray-400 font-bold">Credor: {{ partida[cobranca.credor_id].name }}</p>
-                        </div>
-                        <form method="POST" action="{{ url_for('pagar_cobranca_parcelada', devedor_id=player_id, installment_id=installment_id) }}">
-                            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Pagar</button>
-                        </form>
-                    </div>
-                {% endfor %}
+            <div class="bg-green-50 p-6 rounded-3xl border border-green-100">
+                <h3 class="text-[10px] font-black text-green-600 uppercase mb-4">Contratos a Receber</h3>
+                <div class="space-y-3">
+                    {% set tem_credito = false %}
+                    {% for inst_id, cobranca in COBRANCAS_PARCELADAS.items() %}
+                        {% if cobranca.credor_id == player_id %}
+                            {% set tem_credito = true %}
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-green-200 text-xs">
+                                <div class="flex justify-between font-black uppercase mb-1">
+                                    <p>{{ id_to_name.get(cobranca.devedor_id) }}</p>
+                                    <p class="text-green-600">R$ {{ cobranca.valor_total | format_brl }}</p>
+                                </div>
+                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-green-500 h-full transition-all" style="width: {{ (cobranca.num_parcelas_pagas / cobranca.num_parcelas_total * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </section>
-        {% endif %}
 
         <section>
             <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Últimos Movimentos</h2>
@@ -178,9 +215,7 @@
                                 {{ '⬆️' if is_incoming else '⬇️' }}
                             </div>
                             <div>
-                                <p class="text-[10px] font-black text-gray-800 uppercase leading-none">
-                                    {{ id_to_name.get(t.remetente_id if is_incoming else t.recebedor_id, 'Desconhecido') }}
-                                </p>
+                                <p class="text-[10px] font-black text-gray-800 uppercase leading-none">{{ id_to_name.get(t.remetente_id if is_incoming else t.recebedor_id, 'Banco') }}</p>
                                 <p class="text-[8px] font-bold text-gray-400 mt-1 uppercase">ID #{{ t.id }}</p>
                             </div>
                         </div>
@@ -191,7 +226,36 @@
                 {% endfor %}
             </div>
         </section>
-
     </div>
+
+    <script>
+        // CRONÔMETRO LEILÃO
+        {% if LEILAO_ATUAL.get('ativo') and LEILAO_ATUAL.expira_em %}
+            const expiraEm = {{ LEILAO_ATUAL.expira_em * 1000 }};
+            const timer = setInterval(() => {
+                const distancia = expiraEm - new Date().getTime();
+                const display = document.getElementById("countdown");
+                if (display) {
+                    display.innerHTML = Math.max(0, Math.floor(distancia / 1000)) + "s";
+                    if (distancia < 0) { clearInterval(timer); location.reload(); }
+                }
+            }, 1000);
+        {% endif %}
+
+        // CALCULADORA UNIFICADA
+        let boostAtual = 0;
+        function atualizarCalculo(novoBoost = null) {
+            if (novoBoost !== null) boostAtual = novoBoost;
+            const base = parseFloat(document.getElementById('valor_base').value) || 0;
+            const mult = parseInt(document.getElementById('multiplicador').value) || 1;
+            const subtotal = base * mult;
+            const final = Math.round(subtotal + (subtotal * (boostAtual / 100)));
+            document.getElementById('valor_final_input').value = final;
+            document.getElementById('valor_final_display').innerHTML = "R$ " + final.toLocaleString('pt-BR');
+            document.getElementById('formula_display').innerHTML = `R$ ${base.toLocaleString('pt-BR')} x ${mult} (${boostAtual >= 0 ? '+' : ''}${boostAtual}%)`;
+        }
+        document.getElementById('valor_base').addEventListener('input', () => atualizarCalculo());
+        document.getElementById('multiplicador').addEventListener('change', () => atualizarCalculo());
+    </script>
 </div>
 {% endblock %}
