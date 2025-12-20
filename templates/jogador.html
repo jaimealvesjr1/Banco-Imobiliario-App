@@ -52,10 +52,25 @@
                 <p class="text-sm font-bold leading-relaxed italic text-yellow-100">
                     "{{ dados_jogador.objetivo }}"
                 </p>
-                <p class="text-[8px] mt-4 text-gray-500 uppercase font-black tracking-tighter">
-                    Mantenha seu objetivo em sigilo para evitar sabotagens dos adversários.
-                </p>
             </div>
+        </div>
+    </section>
+
+    <section class="mb-6 overflow-hidden">
+        <div class="flex items-center gap-2 mb-3 px-2">
+            <div class="w-2 h-2 bg-red-600 rounded-full animate-ping"></div>
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Jornal Diário Local</h3>
+        </div>
+        <div class="flex gap-4 overflow-x-auto pb-4 snap-x">
+            {% for m in MANCHETES_VIGENTES %}
+            <div class="min-w-[280px] bg-white p-5 rounded-3xl shadow-sm border-b-4 border-red-600 snap-center">
+                <h4 class="font-black text-gray-800 text-sm mb-1 uppercase italic">{{ m.titulo }}</h4>
+                <p class="text-xs text-gray-500 leading-tight mb-4">{{ m.texto }}</p>
+                <div class="inline-block bg-red-50 text-red-600 px-3 py-1 rounded-full font-black text-[10px]">
+                    EFEITO: {{ m.efeito }}
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </section>
 
@@ -224,6 +239,18 @@
             </div>
         </section>
 
+        <section class="bg-green-50 p-6 rounded-3xl border border-green-100 mb-6">
+            <h3 class="text-[10px] font-black text-green-600 uppercase mb-4 tracking-widest">Solicitar Salário (Passagem pelo Início)</h3>
+            <form method="POST" action="{{ url_for('solicitar_salario', player_id=player_id) }}" class="flex gap-2">
+                <input type="number" name="num_propriedades" placeholder="Qtd. Posses" required 
+                    class="flex-1 p-3 bg-white rounded-xl border-2 border-transparent focus:border-green-400 outline-none text-xs font-bold">
+                <button type="submit" class="bg-green-600 text-white px-4 rounded-xl font-black text-[10px] uppercase">
+                    CLAMAR 💰
+                </button>
+            </form>
+            <p class="text-[8px] text-green-400 mt-2 font-bold uppercase">* Sujeito à aprovação do Banco Central.</p>
+        </section>
+
         <section>
             <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Últimos Movimentos</h2>
             <div class="space-y-2">
@@ -280,7 +307,6 @@
         function toggleObjetivo() {
             const content = document.getElementById('obj-content');
             const status = document.getElementById('obj-status');
-            
             if (content.classList.contains('hidden')) {
                 content.classList.remove('hidden');
                 status.innerText = 'FECHAR';

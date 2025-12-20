@@ -40,6 +40,52 @@
         </div>
     </header>
 
+    <section class="bg-gray-900 text-white p-6 rounded-3xl mb-8 border-l-8 border-red-600 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-black italic uppercase tracking-tighter">Banca de Notícias</h2>
+            <form method="POST" action="{{ url_for('gerar_manchete') }}">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-black text-xs uppercase">
+                    SORTEAR MANCHETE 📰
+                </button>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {% for m in MANCHETES_VIGENTES %}
+            <div class="bg-white/10 p-4 rounded-2xl border border-white/5 relative {{ 'opacity-100 ring-2 ring-red-500' if loop.first else 'opacity-50' }}">
+                <span class="absolute -top-2 -right-2 bg-red-600 text-[8px] px-2 py-1 rounded-full font-black uppercase">VIGENTE</span>
+                <p class="text-[9px] font-black text-red-400 uppercase mb-1">{{ m.data_hora }}</p>
+                <h4 class="font-black text-xs mb-2 leading-tight">{{ m.titulo }}</h4>
+                <p class="text-[10px] text-gray-400 leading-relaxed mb-3">{{ m.texto }}</p>
+                <div class="bg-black/40 p-2 rounded-lg text-center border border-white/10">
+                    <span class="text-[10px] font-mono font-black text-green-400">{{ m.efeito }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if SOLICITACOES_SALARIO %}
+        <section class="col-span-full bg-yellow-50 p-6 rounded-3xl border-2 border-yellow-200 border-dashed mb-8">
+            <h2 class="text-xs font-black text-yellow-700 uppercase tracking-widest mb-4">Aprovações de Crédito Pendentes</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for pid, pedido in SOLICITACOES_SALARIO.items() %}
+                <div class="bg-white p-4 rounded-2xl shadow-sm flex justify-between items-center border border-yellow-100">
+                    <div>
+                        <p class="text-sm font-black text-gray-800 uppercase">{{ pedido.nome }}</p>
+                        <p class="text-[10px] font-bold text-gray-400">Solicitou: R$ {{ pedido.valor | format_brl }} ({{ pedido.qtd }} posses)</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('aprovar_salario', player_id=pid) }}">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-green-700 transition-all">
+                            LIBERAR VERBA ✅
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
     <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {% for player_id, data in jogadores_data.items() %}
             <div class="bg-white rounded-2xl shadow-md overflow-hidden border-2 border-gray-100 group flex flex-col h-full hover:border-monopoly-blue transition-colors">
@@ -71,7 +117,6 @@
             </div>
         {% endfor %}
     </section>
-
     <div class="grid lg:grid-cols-3 gap-8">
         <div class="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
             <div class="flex items-center gap-2 mb-6">

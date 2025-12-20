@@ -15,19 +15,24 @@ BANK_PIN = "2525"
 LEILAO_ATUAL = {}
 COBRANCAS_PARCELADAS = {}
 SALDO_INICIAL = 500000
+SOLICITACOES_SALARIO = {}
+MANCHETES_VIGENTES = []
 
-# Lista de objetivos balanceada 
-OBJETIVOS_LISTA = [
-    "Investidor Visionário: 3 propriedades com expansão máxima + R$ 800k de saldo.",
-    "Imperador Mineiro: 4 propriedades em MG (3 com expansão) + R$ 500k de saldo.",
-    "Magnata Paulista: 4 propriedades em SP (3 com expansão) + R$ 500k de saldo.",
-    "Barão da Bahia: 3 propriedades na Bahia (todas com expansão) + R$ 600k de saldo.",
-    "Chefe Carioca: 4 propriedades no RJ (3 com expansão) + R$ 500k de saldo.",
-    "Diversificação Máxima: 1 propriedade de cada classe + R$ 1M de saldo.",
-    "Gênio da Tecnologia: 3 propriedades de Tecnologia + R$ 1M de saldo.",
-    "Magnata dos Imóveis: 5 propriedades Residenciais + 2 expansões em cada.",
-    "Monopólio Industrial: Todas as propriedades Industriais de um estado + R$ 800k."
-]
+def carregar_conteudo_estatico():
+    caminho_json = os.path.join(os.path.dirname(__file__), 'conteudo_jogo.json')
+    try:
+        with open(caminho_json, 'r', encoding='utf-8') as f:
+            conteudo = json.load(f)
+            obj = conteudo.get('objetivos', [])
+            man = conteudo.get('manchetes', [])
+            if not obj or not man:
+                raise ValueError("Listas de objetivos ou manchetes estão vazias no JSON.")
+            return obj, man
+    except Exception as e:
+        print(f"!!! ERRO FATAL AO CARREGAR JSON: {e}")
+        return ["Objetivo Padrão: Acumular R$ 1M"], [{"titulo": "Erro", "texto": "Falha ao carregar notícias.", "efeito": "Nenhum", "tipo": "global"}]
+
+OBJETIVOS_LISTA, POOL_MANCHETES = carregar_conteudo_estatico()
 
 # --- FUNÇÕES DE APOIO E PERSISTÊNCIA ---
 
@@ -128,14 +133,50 @@ def dashboard():
     jogadores = [(id, d['name']) for id, d in PARTIDA.items() if id not in ('Banco', 'timestamp')]
     return render_template('dashboard.html', game_active=('Banco' in PARTIDA), jogadores=jogadores, PARTIDA=PARTIDA, PRESET_COLORS=PRESET_COLORS, SALDO_INICIAL=SALDO_INICIAL)
 
+@app.route('/banco/gerar_manchete', methods=['POST'])
+def gerar_manchete():
+    global MANCHETES_VIGENTES
+    nova = random.choice(POOL_MANCHETES).copy()
+    if MANCHETES_VIGENTES and nova['titulo'] == MANCHETES_VIGENTES[0]['titulo']:
+        nova = random.choice(POOL_MANCHETES).copy()
+        
+    nova['id'] = str(uuid.uuid4())[:8]
+    nova['data_hora'] = time.strftime('%H:%M')
+    
+    MANCHETES_VIGENTES.insert(0, nova)
+    MANCHETES_VIGENTES = MANCHETES_VIGENTES[:4]
+    
+    save_game_state()
+    flash(f"URGENTE: {nova['titulo']}!", "warning")
+    return redirect(url_for('pagina_banco'))
+
 @app.route('/jogador/<player_id>')
 def pagina_jogador(player_id):
     verificar_encerramento_leilao()
-    if not session.get(f'auth_{player_id}'): return redirect(url_for('jogador_auth', player_id=player_id))
-    dados = PARTIDA[player_id]
-    dest = [('Banco', 'Banco')] + [(id, d['name']) for id, d in PARTIDA.items() if id not in ('Banco', player_id, 'timestamp')]
-    hist = sorted(dados['historico'], key=lambda x: x['id'], reverse=True)
-    return render_template('jogador.html', player_id=player_id, dados_jogador=dados, destinatarios=dest, historico=hist, id_to_name=get_id_to_name_map(), LEILAO_ATUAL=LEILAO_ATUAL, COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS, partida=PARTIDA)
+    if not session.get(f'auth_{player_id}'): 
+        return redirect(url_for('jogador_auth', player_id=player_id))
+    
+    dados = PARTIDA.get(player_id)
+    if not dados: 
+        return redirect(url_for('dashboard'))
+
+    destinatarios = [('Banco', 'Banco')] + [(id, d['name']) for id, d in PARTIDA.items() if id not in ('Banco', player_id, 'timestamp')]
+    historico_ordenado = sorted(dados['historico'], key=lambda x: x['id'], reverse=True)
+    
+    id_to_name = {id: data['name'] for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
+    id_to_name['Banco'] = 'Banco'
+
+    return render_template('jogador.html', 
+                           player_id=player_id, 
+                           dados_jogador=dados,
+                           destinatarios=destinatarios,
+                           historico=historico_ordenado,
+                           id_to_name=id_to_name,
+                           MANCHETES_VIGENTES=MANCHETES_VIGENTES,
+                           LEILAO_ATUAL=LEILAO_ATUAL,
+                           COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS,
+                           SOLICITACOES_SALARIO=SOLICITACOES_SALARIO,
+                           partida=PARTIDA)
 
 @app.route('/leilao/lance/<player_id>', methods=['POST'])
 def dar_lance(player_id):
@@ -565,6 +606,33 @@ def transacao_unificada():
     flash(mensagem, 'error' if "Erro" in mensagem else 'success')
     return redirect(url_for('pagina_banco'))
 
+@app.route('/jogador/solicitar_salario/<player_id>', methods=['POST'])
+def solicitar_salario(player_id):
+    global SOLICITACOES_SALARIO
+    num_propriedades = int(request.form.get('num_propriedades', 0))
+    
+    SOLICITACOES_SALARIO[player_id] = {
+        'nome': PARTIDA[player_id]['name'],
+        'qtd': num_propriedades,
+        'valor': 200000 + (num_propriedades * 50000),
+        'timestamp': time.time()
+    }
+    save_game_state()
+    flash("Solicitação de salário enviada ao Banco Central!", "info")
+    return redirect(url_for('pagina_jogador', player_id=player_id))
+
+@app.route('/banco/aprovar_salario/<player_id>', methods=['POST'])
+def aprovar_salario(player_id):
+    global SOLICITACOES_SALARIO
+    pedido = SOLICITACOES_SALARIO.pop(player_id, None)
+    
+    if pedido:
+        PARTIDA[player_id]['saldo'] += pedido['valor']
+        registrar_transacao('Banco', player_id, pedido['valor'])
+        save_game_state()
+        flash(f"Salário de {pedido['nome']} aprovado!", "success")
+    return redirect(url_for('pagina_banco'))
+
 @app.route('/leilao/iniciar', methods=['POST'])
 def iniciar_leilao():
     global LEILAO_ATUAL
@@ -629,37 +697,22 @@ def finalizar_leilao():
 
     return redirect(url_for('pagina_banco'))
 
-# 🌟 Rota /banco (Integração do Ranking)
 @app.route('/banco')
 def pagina_banco():
-    if 'Banco' not in PARTIDA:
-        flash("Partida não iniciada.", 'error')
-        return redirect(url_for('dashboard'))
+    verificar_encerramento_leilao()
+    if not session.get('bank_logged_in'): return redirect(url_for('banco_login'))
     
-    if not session.get('bank_logged_in'):
-        return redirect(url_for('banco_login'))
-        
-    jogadores_data = {id: data for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
+    jogadores_monitor = {id: data for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
     
-    ranking_corrente = sorted(
-        jogadores_data.items(),
-        key=lambda item: item[1]['saldo'],
-        reverse=True
-    )
-    
-    ranking_poupanca = sorted(
-        jogadores_data.items(),
-        key=lambda item: item[1]['poupanca'],
-        reverse=True
-    )
+    ranking_corrente = sorted(jogadores_monitor.items(), key=lambda x: x[1]['saldo'], reverse=True)
     
     return render_template('banco.html', 
-                           jogadores_data=jogadores_data,
+                           jogadores_data=jogadores_monitor,
                            ranking_corrente=ranking_corrente,
-                           ranking_poupanca=ranking_poupanca,
-                           id_to_name=get_id_to_name_map(),
                            partida=PARTIDA,
-                           LEILAO_ATUAL=LEILAO_ATUAL)
+                           LEILAO_ATUAL=LEILAO_ATUAL,
+                           MANCHETES_VIGENTES=MANCHETES_VIGENTES,
+                           SOLICITACOES_SALARIO=SOLICITACOES_SALARIO)
 
 @app.route('/banco/reset_pin/<player_id>', methods=['POST'])
 def reset_pin(player_id):
