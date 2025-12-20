@@ -8,18 +8,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'chave_chaves'
 
-PRESET_COLORS = [
-    '#3B82F6',  # Red-500
-    '#EF4444',  # Blue-500
-    '#10B981',  # Emerald-500
-    '#F59E0B',  # Amber-500
-    '#8B5CF6',  # Violet-500
-    '#EC4899',  # Pink-500
-    '#6B7280',  # Gray-500
-    '#06B6D4'   # Cyan-500
-]
-
-# Variáveis globais para armazenar o estado do jogo
+PRESET_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6B7280', '#06B6D4']
 DATA_FILE = 'banco_imobiliario_state.json' 
 PARTIDA = {}
 BANK_PIN = "2525"
@@ -27,20 +16,145 @@ LEILAO_ATUAL = {}
 COBRANCAS_PARCELADAS = {}
 SALDO_INICIAL = 500000
 
+# Lista de objetivos balanceada 
+OBJETIVOS_LISTA = [
+    "Investidor Visionário: 3 propriedades com expansão máxima + R$ 800k de saldo.",
+    "Imperador Mineiro: 4 propriedades em MG (3 com expansão) + R$ 500k de saldo.",
+    "Magnata Paulista: 4 propriedades em SP (3 com expansão) + R$ 500k de saldo.",
+    "Barão da Bahia: 3 propriedades na Bahia (todas com expansão) + R$ 600k de saldo.",
+    "Chefe Carioca: 4 propriedades no RJ (3 com expansão) + R$ 500k de saldo.",
+    "Diversificação Máxima: 1 propriedade de cada classe + R$ 1M de saldo.",
+    "Gênio da Tecnologia: 3 propriedades de Tecnologia + R$ 1M de saldo.",
+    "Magnata dos Imóveis: 5 propriedades Residenciais + 2 expansões em cada.",
+    "Monopólio Industrial: Todas as propriedades Industriais de um estado + R$ 800k."
+]
+
+# --- FUNÇÕES DE APOIO E PERSISTÊNCIA ---
+
 def verificar_encerramento_leilao():
     global LEILAO_ATUAL
     if LEILAO_ATUAL.get('ativo') and time.time() > LEILAO_ATUAL.get('expira_em', 0):
         vencedor_id = LEILAO_ATUAL.get('jogador_atual_id')
         valor_final = LEILAO_ATUAL.get('lance_atual')
         propriedade = LEILAO_ATUAL.get('propriedade')
-
         if vencedor_id:
-            mensagem = executar_transacao(vencedor_id, 'Banco', valor_final)
-            if "Erro" not in mensagem:
-                flash(f"MARTELO BATIDO! {PARTIDA[vencedor_id]['name']} comprou {propriedade} por R$ {format_brl(valor_final)}!", 'success')
-        
+            executar_transacao(vencedor_id, 'Banco', valor_final)
+            flash(f"MARTELO BATIDO! {PARTIDA[vencedor_id]['name']} comprou {propriedade} por R$ {format_brl(valor_final)}!", 'success')
         LEILAO_ATUAL = {}
         save_game_state()
+
+def load_game_state():
+    global PARTIDA, LEILAO_ATUAL, COBRANCAS_PARCELADAS
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r') as f:
+                data = json.load(f)
+                PARTIDA = data.get('partida', {})
+                LEILAO_ATUAL = data.get('leilao', {})
+                COBRANCAS_PARCELADAS = data.get('cobrancas_parceladas', {})
+        except: PARTIDA, LEILAO_ATUAL, COBRANCAS_PARCELADAS = {}, {}, {}
+
+def save_game_state():
+    global PARTIDA, LEILAO_ATUAL, COBRANCAS_PARCELADAS
+    try:
+        with open(DATA_FILE, 'w') as f:
+            json.dump({'partida': PARTIDA, 'leilao': LEILAO_ATUAL, 'cobrancas_parceladas': COBRANCAS_PARCELADAS}, f, indent=4)
+    except Exception as e: print(f"Erro ao salvar: {e}")
+
+def format_brl(value):
+    try: return f"{int(value):,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except: return value
+
+app.jinja_env.filters['format_brl'] = format_brl
+
+def get_id_to_name_map():
+    m = {id: data['name'] for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
+    m['Banco'] = 'Banco'
+    return m
+
+# --- LÓGICA DE TRANSAÇÕES ---
+
+def registrar_transacao(remetente_id, recebedor_id, valor):
+    agora = PARTIDA.get('timestamp', 0) + 1
+    PARTIDA['timestamp'] = agora
+    t = {'id': agora, 'valor': valor, 'remetente_id': remetente_id, 'recebedor_id': recebedor_id, 'timestamp': agora}
+    if remetente_id != 'Banco': PARTIDA[remetente_id]['historico'].append(t)
+    if recebedor_id != 'Banco': PARTIDA[recebedor_id]['historico'].append(t)
+    PARTIDA['Banco']['historico'].append(t)
+
+def executar_transacao(remetente_id, recebedor_id, valor):
+    try: valor = int(valor)
+    except: return "Erro: Valor inválido."
+    if valor <= 0: return "Erro: Valor deve ser positivo."
+    if remetente_id != 'Banco':
+        if PARTIDA[remetente_id]['saldo'] < valor: flash(f"ALERTA: {PARTIDA[remetente_id]['name']} com saldo negativo!", "warning")
+        PARTIDA[remetente_id]['saldo'] -= valor
+    if recebedor_id != 'Banco': PARTIDA[recebedor_id]['saldo'] += valor
+    registrar_transacao(remetente_id, recebedor_id, valor)
+    save_game_state()
+    return "Transação realizada!"
+
+# --- ROTAS ---
+
+@app.route('/', methods=['GET', 'POST'])
+def dashboard():
+    global PARTIDA
+    if request.method == 'POST' and request.form.get('action') == 'iniciar':
+        jogadores_data = []
+        for key, value in request.form.items():
+            if key.startswith('jogador_name_'):
+                idx = key.split('_')[-1]
+                if value.strip(): jogadores_data.append({'name': value.strip(), 'color': request.form.get(f'jogador_color_{idx}')})
+        
+        if len(jogadores_data) < 2:
+            flash("Mínimo de 2 jogadores.", 'error')
+            return redirect(url_for('dashboard'))
+
+        saldo_ini = int(request.form.get('saldo_inicial', SALDO_INICIAL))
+        PARTIDA = {'Banco': {'historico': [], 'poupanca_trancada': False}, 'timestamp': 0}
+        
+        # SORTEIO DE OBJETIVOS (CORREÇÃO CRÍTICA)
+        pool_objetivos = OBJETIVOS_LISTA.copy()
+        random.shuffle(pool_objetivos)
+        
+        for p in jogadores_data:
+            player_id = str(uuid.uuid4())
+            obj = pool_objetivos.pop() if pool_objetivos else "Dominar o Mercado: R$ 1M de saldo total."
+            PARTIDA[player_id] = {'name': p['name'], 'saldo': saldo_ini, 'historico': [], 'color': p['color'], 'poupanca': 0, 'pin': None, 'objetivo': obj}
+        
+        save_game_state()
+        return redirect(url_for('dashboard'))
+    
+    jogadores = [(id, d['name']) for id, d in PARTIDA.items() if id not in ('Banco', 'timestamp')]
+    return render_template('dashboard.html', game_active=('Banco' in PARTIDA), jogadores=jogadores, PARTIDA=PARTIDA, PRESET_COLORS=PRESET_COLORS, SALDO_INICIAL=SALDO_INICIAL)
+
+@app.route('/jogador/<player_id>')
+def pagina_jogador(player_id):
+    verificar_encerramento_leilao()
+    if not session.get(f'auth_{player_id}'): return redirect(url_for('jogador_auth', player_id=player_id))
+    dados = PARTIDA[player_id]
+    dest = [('Banco', 'Banco')] + [(id, d['name']) for id, d in PARTIDA.items() if id not in ('Banco', player_id, 'timestamp')]
+    hist = sorted(dados['historico'], key=lambda x: x['id'], reverse=True)
+    return render_template('jogador.html', player_id=player_id, dados_jogador=dados, destinatarios=dest, historico=hist, id_to_name=get_id_to_name_map(), LEILAO_ATUAL=LEILAO_ATUAL, COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS, partida=PARTIDA)
+
+@app.route('/leilao/lance/<player_id>', methods=['POST'])
+def dar_lance(player_id):
+    global LEILAO_ATUAL
+    verificar_encerramento_leilao()
+    if not LEILAO_ATUAL.get('ativo'):
+        flash("Leilão encerrado.", 'error')
+        return redirect(url_for('pagina_jogador', player_id=player_id))
+    try:
+        lance = int(request.form['lance'])
+        if PARTIDA[player_id]['saldo'] < lance or lance <= LEILAO_ATUAL['lance_atual']:
+            flash("Saldo insuficiente ou lance baixo.", 'error')
+        else:
+            h = LEILAO_ATUAL.get('ultimos_lances', [])
+            h.insert(0, {'nome': PARTIDA[player_id]['name'], 'valor': lance})
+            LEILAO_ATUAL.update({'lance_atual': lance, 'jogador_atual_id': player_id, 'jogador_atual_nome': PARTIDA[player_id]['name'], 'expira_em': time.time() + 30, 'ultimos_lances': h[:3]})
+            save_game_state()
+    except: flash("Erro no lance.", 'error')
+    return redirect(url_for('pagina_jogador', player_id=player_id))
 
 @app.route('/banco_login', methods=['GET', 'POST'])
 def banco_login():
@@ -379,79 +493,13 @@ def executar_transacao_percentual(tipo, percentual):
     return "Erro desconhecido na transação percentual."
 
 def get_id_to_name_map():
-    id_to_name = {
-        id: data['name'] 
-        for id, data in PARTIDA.items() 
-        if id not in ('Banco', 'timestamp')
-    }
-    id_to_name['Banco'] = 'Banco'
-    return id_to_name
+    m = {id: data['name'] for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
+    m['Banco'] = 'Banco'
+    return m
 
 # --- ROTAS DA APLICAÇÃO ---
 
 load_game_state()
-# 1. Rota de Gerenciamento do Jogo (Início, Continuação, Configuração)
-@app.route('/', methods=['GET', 'POST'])
-def dashboard():
-    global PARTIDA, SALDO_INICIAL
-
-    # Processa POST de Configuração de Partida
-    if request.method == 'POST' and request.form.get('action') == 'iniciar':
-        
-        jogadores_data = []
-        # O formulário será dinâmico, buscando por chaves com 'jogador_name_'
-        for key, value in request.form.items():
-            if key.startswith('jogador_name_'):
-                # Assumimos que o índice está no final da chave (ex: jogador_name_0)
-                index = key.split('_')[-1]
-                name = value.strip()
-                color = request.form.get(f'jogador_color_{index}')
-                if name and color:
-                    jogadores_data.append({'name': name, 'color': color})
-            
-        saldo_inicial_str = request.form.get('saldo_inicial', str(SALDO_INICIAL))
-        
-        try:
-            saldo_inicial = int(saldo_inicial_str)
-        except ValueError:
-            flash("Saldo inicial deve ser um número inteiro.", 'error')
-            return redirect(url_for('dashboard'))
-
-        if len(jogadores_data) < 2:
-            flash("São necessários pelo menos 2 jogadores.", 'error')
-            return redirect(url_for('dashboard'))
-            
-        # Inicializa a nova partida
-        PARTIDA = {
-            'Banco': {'historico': [], 'poupanca_trancada': False},
-            'timestamp': 0
-        }
-        
-        for p in jogadores_data:
-            player_id = str(uuid.uuid4())
-            PARTIDA[player_id] = {
-                'name': p['name'], 
-                'saldo': saldo_inicial, 
-                'historico': [], 
-                'color': p['color'],
-                'poupanca': 0,
-                'pin': None
-            }        
-        save_game_state()
-        
-        flash("Partida iniciada com sucesso! Escolha seu perfil para continuar.", 'success')
-        return redirect(url_for('dashboard'))
-        
-    # Processa GET: Exibe a tela de configuração ou seleção
-    game_active = 'Banco' in PARTIDA
-    jogadores = [(id, data['name']) for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')]
-    
-    return render_template('dashboard.html', 
-                           game_active=game_active, 
-                           jogadores=jogadores, 
-                           SALDO_INICIAL=SALDO_INICIAL, 
-                           PRESET_COLORS=PRESET_COLORS,
-                           PARTIDA=PARTIDA)
 
 # 2. Rota para Excluir (Resetar) o Jogo
 @app.route('/reset', methods=['POST'])
@@ -550,56 +598,6 @@ def iniciar_leilao():
     save_game_state()
     flash(f"Leilão da propriedade '{propriedade}' iniciado com lance inicial de R$ {format_brl(lance_inicial)}!", 'success')
     return redirect(url_for('pagina_banco'))
-
-
-@app.route('/leilao/lance/<player_id>', methods=['POST'])
-def dar_lance(player_id):
-    global LEILAO_ATUAL
-    
-    if LEILAO_ATUAL.get('ativo') and time.time() > LEILAO_ATUAL.get('expira_em', 0):
-        verificar_encerramento_leilao()
-        flash("Erro: O leilão encerrou enquanto você digitava!", 'error')
-        return redirect(url_for('pagina_jogador', player_id=player_id))
-    
-    if not LEILAO_ATUAL.get('ativo', False) or time.time() > LEILAO_ATUAL.get('expira_em', 0):
-        verificar_encerramento_leilao() 
-        flash("Erro: O leilão já foi encerrado.", 'error')
-        return redirect(url_for('pagina_jogador', player_id=player_id))
-        
-    try:
-        novo_lance = int(request.form['lance'])
-        
-        saldo_jogador = PARTIDA[player_id]['saldo']
-        if saldo_jogador < novo_lance:
-            flash(f"Erro: Saldo R$ {format_brl(saldo_jogador)} insuficiente para cobrir o lance.", 'error')
-            return redirect(url_for('pagina_jogador', player_id=player_id))
-
-        if novo_lance <= LEILAO_ATUAL['lance_atual']:
-            flash(f"Erro: Seu lance deve ser maior que R$ {format_brl(LEILAO_ATUAL['lance_atual'])}.", 'error')
-            return redirect(url_for('pagina_jogador', player_id=player_id))
-        
-    except ValueError:
-        flash("Erro: O lance deve ser um número inteiro.", 'error')
-        return redirect(url_for('pagina_jogador', player_id=player_id))
-
-    novo_registro = {
-        'nome': PARTIDA[player_id]['name'],
-        'valor': novo_lance
-    }
-    
-    historico = LEILAO_ATUAL.get('ultimos_lances', [])
-    historico.insert(0, novo_registro)
-    LEILAO_ATUAL['ultimos_lances'] = historico[:3]
-
-    LEILAO_ATUAL['lance_atual'] = novo_lance
-    LEILAO_ATUAL['jogador_atual_id'] = player_id
-    LEILAO_ATUAL['jogador_atual_nome'] = PARTIDA[player_id]['name']
-    LEILAO_ATUAL['expira_em'] = time.time() + 30
-    
-    save_game_state()
-    
-    flash(f"Sucesso! Você lidera o leilão com R$ {format_brl(novo_lance)}.", 'success')
-    return redirect(url_for('pagina_jogador', player_id=player_id))
 
 @app.route('/leilao/finalizar', methods=['POST'])
 def finalizar_leilao():
@@ -723,44 +721,6 @@ def jogador_auth(player_id):
         flash("PIN Incorreto!", "error")
     return render_template('jogador_login.html', jogador=jogador, jogador_id=player_id)
 
-@app.route('/jogador/<player_id>')
-def pagina_jogador(player_id):
-    verificar_encerramento_leilao()
-    if not session.get(f'auth_{player_id}'):
-        return redirect(url_for('jogador_auth', player_id=player_id))
-    
-    if player_id not in PARTIDA or player_id == 'Banco':
-        flash("Jogador não encontrado.", 'error')
-        return redirect(url_for('dashboard'))
-        
-    dados_jogador = PARTIDA[player_id]
-    
-    # Prepara destinatários para o formulário de pagamento
-    destinatarios = [('Banco', 'Banco')] + [
-        (id, data['name']) 
-        for id, data in PARTIDA.items() 
-        if id not in ('Banco', player_id, 'timestamp')
-    ]
-
-    historico = sorted(dados_jogador['historico'], key=lambda x: x['id'], reverse=True)
-    
-    id_to_name = {
-        id: data['name'] 
-        for id, data in PARTIDA.items() 
-        if id not in ('Banco', 'timestamp')
-    }
-    id_to_name['Banco'] = 'Banco'
-
-    return render_template('jogador.html', 
-                           player_id=player_id, 
-                           dados_jogador=dados_jogador,
-                           destinatarios=destinatarios,
-                           historico=historico,
-                           id_to_name=id_to_name,
-                           partida=PARTIDA,
-                           LEILAO_ATUAL=LEILAO_ATUAL,
-                           COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS)
-
 @app.route('/jogador_logout/<player_id>')
 def logout_jogador(player_id):
     session.pop(f'auth_{player_id}', None)
@@ -817,4 +777,5 @@ def pagar_cobranca_parcelada(devedor_id, installment_id):
     return redirect(url_for('pagina_jogador', player_id=devedor_id))
 
 if __name__ == '__main__':
+    load_game_state()
     app.run(debug=True)

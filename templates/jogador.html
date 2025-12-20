@@ -39,6 +39,26 @@
         </div>
     </header>
 
+    <section class="mb-6">
+        <div class="bg-monopoly-dark text-white rounded-2xl overflow-hidden shadow-lg border-b-4 border-yellow-500">
+            <button onclick="toggleObjetivo()" class="w-full p-4 flex justify-between items-center hover:bg-gray-800 transition-colors">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">📜</span>
+                    <span class="font-black text-xs uppercase tracking-widest">Missão Secreta</span>
+                </div>
+                <span id="obj-status" class="text-yellow-500 font-bold">REVELAR</span>
+            </button>
+            <div id="obj-content" class="hidden p-5 bg-gray-900 border-t border-white/10">
+                <p class="text-sm font-bold leading-relaxed italic text-yellow-100">
+                    "{{ dados_jogador.objetivo }}"
+                </p>
+                <p class="text-[8px] mt-4 text-gray-500 uppercase font-black tracking-tighter">
+                    Mantenha seu objetivo em sigilo para evitar sabotagens dos adversários.
+                </p>
+            </div>
+        </div>
+    </section>
+
     {% if LEILAO_ATUAL.get('ativo') %} 
         <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 p-6 rounded-3xl shadow-xl border-4 border-black mb-8 relative overflow-hidden">
             <div class="absolute top-2 right-2 flex gap-1">
@@ -256,6 +276,19 @@
         }
         document.getElementById('valor_base').addEventListener('input', () => atualizarCalculo());
         document.getElementById('multiplicador').addEventListener('change', () => atualizarCalculo());
+
+        function toggleObjetivo() {
+            const content = document.getElementById('obj-content');
+            const status = document.getElementById('obj-status');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                status.innerText = 'FECHAR';
+            } else {
+                content.classList.add('hidden');
+                status.innerText = 'REVELAR';
+            }
+        }
     </script>
 </div>
 {% endblock %}
