@@ -15,21 +15,38 @@
         {"titulo": "Dividendos de Energia", "texto": "EcoEnergia distribui lucros recordes.", "efeito": "R$ 60k bônus por título A1/A2/A3", "tipo": "acao"},
         {"titulo": "Recall Automotivo", "texto": "Falha em motores da EcoMotion Motors gera prejuízo.", "efeito": "Multa de R$ 80k p/ acionistas", "tipo": "acao"},
         {"titulo": "Quebra de Patente", "texto": "Pharma Solutions perde exclusividade de medicamento.", "efeito": "Ações Pharma não rendem lucro", "tipo": "acao"},
-        {"titulo": "Carnaval na Bahia", "texto": "Turismo explode e hotéis ficam lotados.", "efeito": "+50% Aluguéis na Bahia (BA)", "tipo": "geografia"},
-        {"titulo": "Crise Hídrica em SP", "texto": "Falta de água afeta indústrias e usinas.", "efeito": "-30% Aluguéis em São Paulo", "tipo": "geografia"},
+
+        {"titulo": "Carnaval na Bahia", "texto": "Turismo explode e hotéis ficam lotados.", "efeito": "+20% Aluguéis na Bahia (BA)", "tipo": "geografia"},
+        {"titulo": "Crise Hídrica em SP", "texto": "Falta de água afeta indústrias e usinas.", "efeito": "-15% Aluguéis em São Paulo", "tipo": "geografia"},
         {"titulo": "Revitalização no RJ", "texto": "Novos investimentos em Copacabana e Búzios.", "efeito": "+20% Aluguéis no Rio de Janeiro", "tipo": "geografia"},
         {"titulo": "Boom de Brasília", "texto": "Novas emendas parlamentares aquecem o DF.", "efeito": "+R$ 50k p/ donos de propriedades no DF", "tipo": "geografia"},
-        {"titulo": "Praga na Lavoura", "texto": "Gafanhotos atingem plantações em GO e MG.", "efeito": "-50% Lucros de Agronegócio (GO/MG)", "tipo": "geografia"},
+        {"titulo": "Praga na Lavoura", "texto": "Gafanhotos atingem plantações em GO e MG.", "efeito": "-20% Lucros de Agronegócio (GO/MG)", "tipo": "geografia"},
+
         {"titulo": "Revolução Verde", "texto": "Subsídios para energia limpa e agrotóxicos orgânicos.", "efeito": "+15% Aluguéis Agro/Industrial", "tipo": "setor"},
         {"titulo": "Greve Geral", "texto": "Sindicatos param parques industriais por melhores salários.", "efeito": "Indústrias não cobram aluguel", "tipo": "setor"},
         {"titulo": "Recorde da Safra", "texto": "Exportação de soja e café atinge níveis históricos.", "efeito": "Bônus de R$ 150k p/ Reis do Agro", "tipo": "setor"},
+
         {"titulo": "Paraíso Fiscal", "texto": "Governo zera impostos para incentivar consumo.", "efeito": "Imposto Federal = R$ 0", "tipo": "global"},
-        {"titulo": "Corrida Bancária", "texto": "Pânico financeiro gera taxas de saque.", "efeito": "Taxa de 15% para resgates da Poupança", "tipo": "global"},
+        {"titulo": "Corrida Bancária", "texto": "Pânico financeiro derruba rendimento da poupança.", "efeito": "Queda de 30% na Poupança", "tipo": "global"},
         {"titulo": "Plano Real 2.0", "texto": "Corte de zeros na moeda para conter inflação.", "efeito": "Todos perdem 10% do saldo em conta", "tipo": "global"},
-        {"titulo": "Auxílio Emergencial", "texto": "Governo injeta liquidez para os mais necessitados.", "efeito": "Jogadores com < R$ 200k recebem R$ 100k", "tipo": "global"},
+        {"titulo": "Auxílio Emergencial", "texto": "Governo injeta liquidez para os mais necessitados.", "efeito": "Metade mais pobre dos jogadores recebe R$ 100k", "tipo": "global"},
+        {"titulo": "Governo Capitalista", "texto": "Governo favorece os mais ricos.", "efeito": "Metade mais rica dos jogadores recebe 20% do saldo em conta", "tipo": "global"},
+        {"titulo": "Governo Comunista", "texto": "Governo limita os mais ricos.", "efeito": "Metade mais rica dos jogadores paga 20% do saldo em conta", "tipo": "global"},
+        {"titulo": "Governo Socialista", "texto": "Governo taxa toda a população.", "efeito": "Todos pagam 20% do saldo em conta", "tipo": "global"},
         {"titulo": "Bolha Imobiliária", "texto": "Preços de expansão disparam devido ao custo de materiais.", "efeito": "Dobro do preço para novas expansões", "tipo": "global"},
-        {"titulo": "Lei Antitruste", "texto": "Governo proíbe monopólios estaduais.", "efeito": "Donos de estados completos perdem R$ 200k", "tipo": "global"},
-        {"titulo": "Operação Lava Jato", "texto": "Investigação de corrupção em licitações.", "efeito": "Jogador vai para a Prisão", "tipo": "global"},
-        {"titulo": "Delação Premiada", "texto": "Jogador presta depoimento na Operação Lava Jato.", "efeito": "Jogador aponta outro para ir pra Prisão", "tipo": "global"}
+
+        {"titulo": "Lei Antitruste", "texto": "Governo proíbe monopólios estaduais.", "efeito": "Donos de estados completos perdem R$ 200k", "tipo": "governamental"},
+        {"titulo": "Reforma Tributária", "texto": "Mudanças nas alíquotas de impostos federais.", "efeito": "Imposto Federal aumenta em 10%", "tipo": "governamental"},
+        {"titulo": "Nova Legislação Ambiental", "texto": "Restrições mais rígidas para indústrias poluentes.", "efeito": "-15% Aluguéis Industriais", "tipo": "governamental"},
+        {"titulo": "Pacote de Infraestrutura", "texto": "Investimentos em rodovias e portos impulsionam o comércio.", "efeito": "+R$ 70k p/ donos de propriedades Industriais", "tipo": "governamental"},
+        {"titulo": "Operação Lava Jato", "texto": "Investigação de corrupção em licitações.", "efeito": "Jogador vai para a Prisão", "tipo": "governamental"},
+        {"titulo": "Pego na Rachadinha", "texto": "Investigação de corrupção em recebimento de verbas.", "efeito": "Jogador vai para a Prisão", "tipo": "governamental"},
+        {"titulo": "Delação Premiada", "texto": "Jogador presta depoimento na Operação Lava Jato.", "efeito": "Jogador aponta outro para ir pra Prisão", "tipo": "governamental"},
+        {"titulo": "Base do Governo", "texto": "Jogador é parte da base do governo.", "efeito": "Jogador coloca uma propriedade em licitação.", "tipo": "governamental"},
+        {"titulo": "Oposição ao Governo", "texto": "Jogador é parte da oposição ao governo.", "efeito": "Jogador retira propriedade sua em licitaçao.", "tipo": "governamental"},
+        {"titulo": "Mexendo os pauzinhos", "texto": "Jogador tem influência no governo.", "efeito": "Jogador pode trocar uma propriedade em licitação.", "tipo": "governamental"},
+        {"titulo": "Delação Premiada", "texto": "Jogador presta depoimento na Operação Rachadinha.", "efeito": "Jogador aponta outro para ir pra Prisão", "tipo": "governamental"},
+        {"titulo": "TOC, TOC, TOC", "texto": "Polícia Federal bate na casa do Jogador.", "efeito": "Jogador vai para a Prisão.", "tipo": "governamental"},
+        {"titulo": "Anistia Presidencial", "texto": "Presidente anistia crimes cometidos.", "efeito": "Jogadores presos saem da prisão sem pagar fiança", "tipo": "governamental"}
     ]
 }

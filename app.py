@@ -19,18 +19,23 @@ SOLICITACOES_SALARIO = {}
 MANCHETES_VIGENTES = []
 
 def carregar_conteudo_estatico():
-    caminho_json = os.path.join(os.path.dirname(__file__), 'conteudo_jogo.json')
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    caminho_json = os.path.join(base_path, 'conteudo_jogo.json')
+    
     try:
+        if not os.path.exists(caminho_json):
+            print(f"!!! ERRO: Arquivo {caminho_json} não encontrado.")
+            return [], []
+            
         with open(caminho_json, 'r', encoding='utf-8') as f:
             conteudo = json.load(f)
-            obj = conteudo.get('objetivos', [])
-            man = conteudo.get('manchetes', [])
-            if not obj or not man:
-                raise ValueError("Listas de objetivos ou manchetes estão vazias no JSON.")
-            return obj, man
+            return conteudo.get('objetivos', []), conteudo.get('manchetes', [])
+    except json.JSONDecodeError:
+        print("!!! ERRO: O arquivo conteudo_jogo.json está com erro de sintaxe (vírgula faltando ou aspas erradas).")
+        return [], []
     except Exception as e:
-        print(f"!!! ERRO FATAL AO CARREGAR JSON: {e}")
-        return ["Objetivo Padrão: Acumular R$ 1M"], [{"titulo": "Erro", "texto": "Falha ao carregar notícias.", "efeito": "Nenhum", "tipo": "global"}]
+        print(f"!!! ERRO INESPERADO: {e}")
+        return [], []
 
 OBJETIVOS_LISTA, POOL_MANCHETES = carregar_conteudo_estatico()
 
@@ -135,7 +140,14 @@ def dashboard():
 
 @app.route('/banco/gerar_manchete', methods=['POST'])
 def gerar_manchete():
-    global MANCHETES_VIGENTES
+    global MANCHETES_VIGENTES, POOL_MANCHETES
+    
+    if not POOL_MANCHETES:
+        _, POOL_MANCHETES = carregar_conteudo_estatico()
+        if not POOL_MANCHETES:
+            flash("Erro crítico: Pool de manchetes vazio. Verifique o arquivo JSON.", "error")
+            return redirect(url_for('pagina_banco'))
+        
     nova = random.choice(POOL_MANCHETES).copy()
     if MANCHETES_VIGENTES and nova['titulo'] == MANCHETES_VIGENTES[0]['titulo']:
         nova = random.choice(POOL_MANCHETES).copy()
