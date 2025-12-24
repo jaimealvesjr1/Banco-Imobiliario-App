@@ -17,6 +17,18 @@ COBRANCAS_PARCELADAS = {}
 SALDO_INICIAL = 500000
 SOLICITACOES_SALARIO = {}
 MANCHETES_VIGENTES = []
+MANCHETES_DISPONIVEIS = []
+
+def obter_proxima_manchete():
+    global MANCHETES_DISPONIVEIS, POOL_MANCHETES
+    
+    # Se o "baralho" acabar, recarregamos e embaralhamos de novo
+    if not MANCHETES_DISPONIVEIS:
+        MANCHETES_DISPONIVEIS = POOL_MANCHETES.copy()
+        random.shuffle(MANCHETES_DISPONIVEIS)
+    
+    # Retira a carta do topo do baralho
+    return MANCHETES_DISPONIVEIS.pop(0)
 
 def carregar_conteudo_estatico():
     base_path = os.path.dirname(os.path.abspath(__file__))
@@ -108,7 +120,7 @@ def executar_transacao(remetente_id, recebedor_id, valor):
 
 @app.route('/', methods=['GET', 'POST'])
 def dashboard():
-    global PARTIDA
+    global PARTIDA, MANCHETES_VIGENTES
     if request.method == 'POST' and request.form.get('action') == 'iniciar':
         jogadores_data = []
         for key, value in request.form.items():
@@ -122,6 +134,7 @@ def dashboard():
 
         saldo_ini = int(request.form.get('saldo_inicial', SALDO_INICIAL))
         PARTIDA = {'Banco': {'historico': [], 'poupanca_trancada': False}, 'timestamp': 0}
+        MANCHETES_VIGENTES = []
         
         # SORTEIO DE OBJETIVOS (CORREÇÃO CRÍTICA)
         pool_objetivos = OBJETIVOS_LISTA.copy()
@@ -140,18 +153,10 @@ def dashboard():
 
 @app.route('/banco/gerar_manchete', methods=['POST'])
 def gerar_manchete():
-    global MANCHETES_VIGENTES, POOL_MANCHETES
+    global MANCHETES_VIGENTES
     
-    if not POOL_MANCHETES:
-        _, POOL_MANCHETES = carregar_conteudo_estatico()
-        if not POOL_MANCHETES:
-            flash("Erro crítico: Pool de manchetes vazio. Verifique o arquivo JSON.", "error")
-            return redirect(url_for('pagina_banco'))
-        
-    nova = random.choice(POOL_MANCHETES).copy()
-    if MANCHETES_VIGENTES and nova['titulo'] == MANCHETES_VIGENTES[0]['titulo']:
-        nova = random.choice(POOL_MANCHETES).copy()
-        
+    nova = obter_proxima_manchete().copy()
+    
     nova['id'] = str(uuid.uuid4())[:8]
     nova['data_hora'] = time.strftime('%H:%M')
     

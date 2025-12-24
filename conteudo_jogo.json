@@ -10,43 +10,155 @@
         "Diversificação de Ativos: Possuir 1 propriedade de cada classe + 1 título de Multinacional A3."
     ],
     "manchetes": [
-        {"titulo": "IPO Tecnológico", "texto": "Startup de I.A. abre capital com sucesso.", "efeito": "+R$ 100k p/ donos de Tech Solutions", "tipo": "acao"},
-        {"titulo": "Vazamento de Dados", "texto": "Escândalo de privacidade derruba ações.", "efeito": "-20% Aluguéis de Tecnologia", "tipo": "setor"},
-        {"titulo": "Dividendos de Energia", "texto": "EcoEnergia distribui lucros recordes.", "efeito": "R$ 60k bônus por título A1/A2/A3", "tipo": "acao"},
-        {"titulo": "Recall Automotivo", "texto": "Falha em motores da EcoMotion Motors gera prejuízo.", "efeito": "Multa de R$ 80k p/ acionistas", "tipo": "acao"},
-        {"titulo": "Quebra de Patente", "texto": "Pharma Solutions perde exclusividade de medicamento.", "efeito": "Ações Pharma não rendem lucro", "tipo": "acao"},
-
-        {"titulo": "Carnaval na Bahia", "texto": "Turismo explode e hotéis ficam lotados.", "efeito": "+20% Aluguéis na Bahia (BA)", "tipo": "geografia"},
-        {"titulo": "Crise Hídrica em SP", "texto": "Falta de água afeta indústrias e usinas.", "efeito": "-15% Aluguéis em São Paulo", "tipo": "geografia"},
-        {"titulo": "Revitalização no RJ", "texto": "Novos investimentos em Copacabana e Búzios.", "efeito": "+20% Aluguéis no Rio de Janeiro", "tipo": "geografia"},
-        {"titulo": "Boom de Brasília", "texto": "Novas emendas parlamentares aquecem o DF.", "efeito": "+R$ 50k p/ donos de propriedades no DF", "tipo": "geografia"},
-        {"titulo": "Praga na Lavoura", "texto": "Gafanhotos atingem plantações em GO e MG.", "efeito": "-20% Lucros de Agronegócio (GO/MG)", "tipo": "geografia"},
-
-        {"titulo": "Revolução Verde", "texto": "Subsídios para energia limpa e agrotóxicos orgânicos.", "efeito": "+15% Aluguéis Agro/Industrial", "tipo": "setor"},
-        {"titulo": "Greve Geral", "texto": "Sindicatos param parques industriais por melhores salários.", "efeito": "Indústrias não cobram aluguel", "tipo": "setor"},
-        {"titulo": "Recorde da Safra", "texto": "Exportação de soja e café atinge níveis históricos.", "efeito": "Bônus de R$ 150k p/ Reis do Agro", "tipo": "setor"},
-
-        {"titulo": "Paraíso Fiscal", "texto": "Governo zera impostos para incentivar consumo.", "efeito": "Imposto Federal = R$ 0", "tipo": "global"},
-        {"titulo": "Corrida Bancária", "texto": "Pânico financeiro derruba rendimento da poupança.", "efeito": "Queda de 30% na Poupança", "tipo": "global"},
-        {"titulo": "Plano Real 2.0", "texto": "Corte de zeros na moeda para conter inflação.", "efeito": "Todos perdem 10% do saldo em conta", "tipo": "global"},
-        {"titulo": "Auxílio Emergencial", "texto": "Governo injeta liquidez para os mais necessitados.", "efeito": "Metade mais pobre dos jogadores recebe R$ 100k", "tipo": "global"},
-        {"titulo": "Governo Capitalista", "texto": "Governo favorece os mais ricos.", "efeito": "Metade mais rica dos jogadores recebe 20% do saldo em conta", "tipo": "global"},
-        {"titulo": "Governo Comunista", "texto": "Governo limita os mais ricos.", "efeito": "Metade mais rica dos jogadores paga 20% do saldo em conta", "tipo": "global"},
-        {"titulo": "Governo Socialista", "texto": "Governo taxa toda a população.", "efeito": "Todos pagam 20% do saldo em conta", "tipo": "global"},
-        {"titulo": "Bolha Imobiliária", "texto": "Preços de expansão disparam devido ao custo de materiais.", "efeito": "Dobro do preço para novas expansões", "tipo": "global"},
-
-        {"titulo": "Lei Antitruste", "texto": "Governo proíbe monopólios estaduais.", "efeito": "Donos de estados completos perdem R$ 200k", "tipo": "governamental"},
-        {"titulo": "Reforma Tributária", "texto": "Mudanças nas alíquotas de impostos federais.", "efeito": "Imposto Federal aumenta em 10%", "tipo": "governamental"},
-        {"titulo": "Nova Legislação Ambiental", "texto": "Restrições mais rígidas para indústrias poluentes.", "efeito": "-15% Aluguéis Industriais", "tipo": "governamental"},
-        {"titulo": "Pacote de Infraestrutura", "texto": "Investimentos em rodovias e portos impulsionam o comércio.", "efeito": "+R$ 70k p/ donos de propriedades Industriais", "tipo": "governamental"},
-        {"titulo": "Operação Lava Jato", "texto": "Investigação de corrupção em licitações.", "efeito": "Jogador vai para a Prisão", "tipo": "governamental"},
-        {"titulo": "Pego na Rachadinha", "texto": "Investigação de corrupção em recebimento de verbas.", "efeito": "Jogador vai para a Prisão", "tipo": "governamental"},
-        {"titulo": "Delação Premiada", "texto": "Jogador presta depoimento na Operação Lava Jato.", "efeito": "Jogador aponta outro para ir pra Prisão", "tipo": "governamental"},
-        {"titulo": "Base do Governo", "texto": "Jogador é parte da base do governo.", "efeito": "Jogador coloca uma propriedade em licitação.", "tipo": "governamental"},
-        {"titulo": "Oposição ao Governo", "texto": "Jogador é parte da oposição ao governo.", "efeito": "Jogador retira propriedade sua em licitaçao.", "tipo": "governamental"},
-        {"titulo": "Mexendo os pauzinhos", "texto": "Jogador tem influência no governo.", "efeito": "Jogador pode trocar uma propriedade em licitação.", "tipo": "governamental"},
-        {"titulo": "Delação Premiada", "texto": "Jogador presta depoimento na Operação Rachadinha.", "efeito": "Jogador aponta outro para ir pra Prisão", "tipo": "governamental"},
-        {"titulo": "TOC, TOC, TOC", "texto": "Polícia Federal bate na casa do Jogador.", "efeito": "Jogador vai para a Prisão.", "tipo": "governamental"},
-        {"titulo": "Anistia Presidencial", "texto": "Presidente anistia crimes cometidos.", "efeito": "Jogadores presos saem da prisão sem pagar fiança", "tipo": "governamental"}
+        {
+            "titulo": "Insider Trading",
+            "texto": "Você recebeu informações privilegiadas sobre a Tech Solutions.",
+            "efeito": "BÔNUS: Receba R$ 150k se tiver ações, senão receba R$ 50k.",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Malha Fina",
+            "texto": "A Receita Federal encontrou irregularidades na sua declaração.",
+            "efeito": "PERDA: Pague 15% do seu saldo total ao Banco imediatamente.",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "Subsídio Governamental",
+            "texto": "Seu lobby em Brasília deu certo. Você recebeu um incentivo fiscal.",
+            "efeito": "BÔNUS: O Banco te paga R$ 200k e você escolhe uma propriedade para expandir.",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Processo Trabalhista",
+            "texto": "Ex-funcionários das suas indústrias ganharam uma causa na justiça.",
+            "efeito": "PERDA: Pague R$ 100k ao Banco para cada propriedade Industrial que tiver.",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "Herança Inesperada",
+            "texto": "Um parente distante deixou ativos líquidos para você.",
+            "efeito": "BÔNUS: Receba R$ 300k do Banco imediatamente.",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Ciberataque Particular",
+            "texto": "Hackers invadiram sua conta bancária digital.",
+            "efeito": "PERDA: Perca R$ 200k de saldo (ou fique negativo).",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "Upgrade de Portfólio",
+            "texto": "Uma consultoria financeira melhorou seus rendimentos.",
+            "efeito": "BÔNUS: O Banco dobra o valor que você tem na Poupança (máximo R$ 300k).",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Crise de Reputação",
+            "texto": "Um escândalo envolvendo seu nome derrubou seus aluguéis.",
+            "efeito": "PERDA: Você não pode cobrar aluguéis.",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "Delação Premiada",
+            "texto": "Você prestou depoimento crucial em um esquema de corrupção.",
+            "efeito": "BÔNUS/CAOS: Receba R$ 100k e escolha 1 jogador para ir à Prisão.",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Pego na Rachadinha",
+            "texto": "Investigação confirmou desvio de verbas no seu gabinete.",
+            "efeito": "PERDA: Vá direto para a Prisão.",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "Lobby das Multinacionais",
+            "texto": "Você conseguiu aprovar uma lei que favorece grandes acionistas.",
+            "efeito": "BÔNUS: Receba R$ 100k para cada título de Multinacional que possuir.",
+            "tipo": "individual_positivo"
+        },
+        {
+            "titulo": "Quebra de Patente",
+            "texto": "Sua principal fonte de renda perdeu exclusividade legal.",
+            "efeito": "PERDA: Entregue um título de Multinacional seu ao Banco (ou pague R$ 200k).",
+            "tipo": "individual_negativo"
+        },
+        {
+            "titulo": "IPO Tecnológico",
+            "texto": "Startup de I.A. que você investiu abriu capital.",
+            "efeito": "GLOBAL: +R$ 100k p/ donos de Tech Solutions.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Carnaval na Bahia",
+            "texto": "Turismo explode. Hotéis e comércios estão lotados.",
+            "efeito": "GEOGRAFIA: +20% nos Aluguéis da Bahia (BA).",
+            "tipo": "geografia"
+        },
+        {
+            "titulo": "Crise Hídrica em SP",
+            "texto": "Seca extrema afeta produção e consumo em São Paulo.",
+            "efeito": "GEOGRAFIA: -20% nos Aluguéis em São Paulo.",
+            "tipo": "geografia"
+        },
+        {
+            "titulo": "Reforma Tributária",
+            "texto": "Governo aumenta o peso dos impostos federais.",
+            "efeito": "GLOBAL: Imposto Federal aumenta em 20%.",
+            "tipo": "governamental"
+        },
+        {
+            "titulo": "Bolha Imobiliária",
+            "texto": "Materiais de construção subiram 100% no mercado global.",
+            "efeito": "GLOBAL: Preço de todas as Expansões dobrado enquanto vigente.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Anistia Presidencial",
+            "texto": "O Presidente perdoou crimes financeiros recentes.",
+            "efeito": "GLOBAL: Todos os jogadores presos saem da prisão sem pagar nada.",
+            "tipo": "governamental"
+        },
+        {
+            "titulo": "Governo Capitalista",
+            "texto": "Estímulo ao acúmulo de riqueza e grandes fortunas.",
+            "efeito": "GLOBAL: A metade mais rica recebe 20% de bônus sobre o saldo corrente.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Governo Socialista",
+            "texto": "Taxação agressiva para redistribuição de renda.",
+            "efeito": "GLOBAL: Todos os jogadores pagam 20% do saldo total ao Banco.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Governo Comunista",
+            "texto": "Distribuição de renda para classe operária.",
+            "efeito": "GLOBAL: A metade mais pobre recebe 20% de bônus sobre o saldo corrente.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Base Governista",
+            "texto": "Acompanhou a base do governo.",
+            "efeito": "Coloque uma propriedade em licitação.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Oposição Governista",
+            "texto": "Se tornou oposição ao governo.",
+            "efeito": "Retire uma propriedade em licitação.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Mexendo os pauzinhos",
+            "texto": "Fez lobby com o governo.",
+            "efeito": "Substitua uma propriedade em licitação.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "TOC, TOC, TOC",
+            "texto": "Operação da Polícia Federal.",
+            "efeito": "PERDA: Vá direto para a Prisão.",
+            "tipo": "individual_negativo"
+        }
     ]
 }
