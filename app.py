@@ -97,12 +97,23 @@ def get_id_to_name_map():
 # --- LÓGICA DE TRANSAÇÕES ---
 
 def registrar_transacao(remetente_id, recebedor_id, valor):
-    agora = PARTIDA.get('timestamp', 0) + 1
-    PARTIDA['timestamp'] = agora
-    t = {'id': agora, 'valor': valor, 'remetente_id': remetente_id, 'recebedor_id': recebedor_id, 'timestamp': agora}
-    if remetente_id != 'Banco': PARTIDA[remetente_id]['historico'].append(t)
-    if recebedor_id != 'Banco': PARTIDA[recebedor_id]['historico'].append(t)
-    PARTIDA['Banco']['historico'].append(t)
+    agora_ts = PARTIDA.get('timestamp', 0) + 1
+    PARTIDA['timestamp'] = agora_ts
+    
+    transacao = {
+        'id': agora_ts,
+        'valor': valor,
+        'remetente_id': remetente_id,
+        'recebedor_id': recebedor_id,
+        'timestamp': agora_ts,
+        'data_hora': time.strftime('%H:%M:%S')
+    }
+    
+    PARTIDA['Banco']['historico'].append(transacao)
+    if remetente_id != 'Banco':
+        PARTIDA[remetente_id]['historico'].append(transacao)
+    if recebedor_id != 'Banco':
+        PARTIDA[recebedor_id]['historico'].append(transacao)
 
 def executar_transacao(remetente_id, recebedor_id, valor):
     try: valor = int(valor)
@@ -717,19 +728,24 @@ def finalizar_leilao():
 @app.route('/banco')
 def pagina_banco():
     verificar_encerramento_leilao()
-    if not session.get('bank_logged_in'): return redirect(url_for('banco_login'))
+    if not session.get('bank_logged_in'): 
+        return redirect(url_for('banco_login'))
     
     jogadores_monitor = {id: data for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
     
-    ranking_corrente = sorted(jogadores_monitor.items(), key=lambda x: x[1]['saldo'], reverse=True)
+    historico_global = PARTIDA.get('Banco', {}).get('historico', [])
     
+    id_to_name = {pid: data['name'] for pid, data in PARTIDA.items() if pid not in ('Banco', 'timestamp')}
+    id_to_name['Banco'] = 'Banco Central'
+
     return render_template('banco.html', 
                            jogadores_data=jogadores_monitor,
-                           ranking_corrente=ranking_corrente,
                            partida=PARTIDA,
                            LEILAO_ATUAL=LEILAO_ATUAL,
                            MANCHETES_VIGENTES=MANCHETES_VIGENTES,
-                           SOLICITACOES_SALARIO=SOLICITACOES_SALARIO)
+                           SOLICITACOES_SALARIO=SOLICITACOES_SALARIO,
+                           historico=reversed(historico_global),
+                           id_to_name=id_to_name)
 
 @app.route('/banco/reset_pin/<player_id>', methods=['POST'])
 def reset_pin(player_id):
