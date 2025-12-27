@@ -13,8 +13,8 @@
         {
             "titulo": "Insider Trading",
             "texto": "Você recebeu informações privilegiadas sobre a Tech Solutions.",
-            "efeito": "BÔNUS: Receba R$ 150k se tiver ações, senão receba R$ 50k.",
-            "tipo": "individual_positivo"
+            "efeito": "BÔNUS: Receba 150k se tiver ações, senão receba 50k.",
+            "tipo": "individual_positive"
         },
         {
             "titulo": "Malha Fina",
@@ -25,86 +25,140 @@
         {
             "titulo": "Subsídio Governamental",
             "texto": "Seu lobby em Brasília deu certo. Você recebeu um incentivo fiscal.",
-            "efeito": "BÔNUS: O Banco te paga R$ 200k e você escolhe uma propriedade para expandir.",
+            "efeito": "BÔNUS: Receba 20% de bônus sobre seu saldo e expanda uma propriedade grátis.",
             "tipo": "individual_positivo"
         },
         {
             "titulo": "Processo Trabalhista",
             "texto": "Ex-funcionários das suas indústrias ganharam uma causa na justiça.",
-            "efeito": "PERDA: Pague R$ 100k ao Banco para cada propriedade Industrial que tiver.",
+            "efeito": "PERDA: Pague 10% do seu saldo para cada propriedade Industrial que possuir(Máximo 30%).",
             "tipo": "individual_negativo"
         },
         {
             "titulo": "Herança Inesperada",
             "texto": "Um parente distante deixou ativos líquidos para você.",
-            "efeito": "BÔNUS: Receba R$ 300k do Banco imediatamente.",
+            "efeito": "BÔNUS: Receba 25% de bônus sobre seu saldo corrente do Banco.",
             "tipo": "individual_positivo"
         },
         {
             "titulo": "Ciberataque Particular",
             "texto": "Hackers invadiram sua conta bancária digital.",
-            "efeito": "PERDA: Perca R$ 200k de saldo (ou fique negativo).",
+            "efeito": "PERDA: Pague 20% do seu saldo ao Banco imediatamente.",
             "tipo": "individual_negativo"
         },
         {
             "titulo": "Upgrade de Portfólio",
             "texto": "Uma consultoria financeira melhorou seus rendimentos.",
-            "efeito": "BÔNUS: O Banco dobra o valor que você tem na Poupança (máximo R$ 300k).",
+            "efeito": "BÔNUS: O Banco rende 50% extras sobre o valor que você tem na Poupança.",
             "tipo": "individual_positivo"
         },
         {
             "titulo": "Crise de Reputação",
-            "texto": "Um escândalo envolvendo seu nome derrubou seus aluguéis.",
-            "efeito": "PERDA: Você não pode cobrar aluguéis.",
+            "texto": "Um escândalo envolvendo seu nome derrubou seus rendimentos.",
+            "efeito": "PERDA: Suas receitas rendem 50% menos enquanto esta notícia estiver vigente.",
             "tipo": "individual_negativo"
         },
         {
             "titulo": "Delação Premiada",
             "texto": "Você prestou depoimento crucial em um esquema de corrupção.",
-            "efeito": "BÔNUS/CAOS: Receba R$ 100k e escolha 1 jogador para ir à Prisão.",
+            "efeito": "BÔNUS: Receba 25% do seu saldo e escolha 1 jogador para ir à Prisão.",
             "tipo": "individual_positivo"
         },
         {
-            "titulo": "Pego na Rachadinha",
-            "texto": "Investigação confirmou desvio de verbas no seu gabinete.",
-            "efeito": "PERDA: Vá direto para a Prisão.",
+            "titulo": "Envolvimento em Escândalo",
+            "texto": "Investigação confirmou envolvimento com desvios de verbas.",
+            "efeito": "PERDA: Pague 10% de multa sobre o saldo e vá direto para a Prisão.",
             "tipo": "individual_negativo"
         },
         {
             "titulo": "Lobby das Multinacionais",
             "texto": "Você conseguiu aprovar uma lei que favorece grandes acionistas.",
-            "efeito": "BÔNUS: Receba R$ 100k para cada título de Multinacional que possuir.",
+            "efeito": "BÔNUS: Receba 10% de bônus para cada título de Multinacional que possuir.",
             "tipo": "individual_positivo"
         },
         {
             "titulo": "Quebra de Patente",
             "texto": "Sua principal fonte de renda perdeu exclusividade legal.",
-            "efeito": "PERDA: Entregue um título de Multinacional seu ao Banco (ou pague R$ 200k).",
+            "efeito": "PERDA: Entregue um título de Multinacional ou pague 200k do seu saldo.",
             "tipo": "individual_negativo"
         },
         {
-            "titulo": "IPO Tecnológico",
-            "texto": "Startup de I.A. que você investiu abriu capital.",
-            "efeito": "GLOBAL: +R$ 100k p/ donos de Tech Solutions.",
+            "titulo": "Mercado em Alta",
+            "texto": "Alta na bolsa de valores.",
+            "efeito": "BÔNUS: Tech Solutions/EcoEnergia/Ecomotion geram bônus de 15% sobre o saldo.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Mercado em Alta",
+            "texto": "Alta na bolsa de valores.",
+            "efeito": "BÔNUS: Pharma Solutions/Agro Global geram bônus de 15% sobre o saldo.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Mercado em Baixa",
+            "texto": "Queda na bolsa de valores.",
+            "efeito": "PERDA: Tech Solutions/EcoEnergia/Ecomotion geram perda de 15% sobre o saldo.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Mercado em Baixa",
+            "texto": "Queda na bolsa de valores.",
+            "efeito": "PERDA: Pharma Solutions/Agro Global gera perda de 15% sobre o saldo.",
             "tipo": "setor"
         },
         {
             "titulo": "Carnaval na Bahia",
             "texto": "Turismo explode. Hotéis e comércios estão lotados.",
-            "efeito": "GEOGRAFIA: +20% nos Aluguéis da Bahia (BA).",
+            "efeito": "GEOGRAFIA: +20% nos rendimentos na Bahia (BA).",
             "tipo": "geografia"
         },
         {
             "titulo": "Crise Hídrica em SP",
             "texto": "Seca extrema afeta produção e consumo em São Paulo.",
-            "efeito": "GEOGRAFIA: -20% nos Aluguéis em São Paulo.",
+            "efeito": "GEOGRAFIA: -20% nos rendimentos em São Paulo.",
+            "tipo": "geografia"
+        },
+        {
+            "titulo": "Alta Temporada no RJ",
+            "texto": "Férias escolares impulsiona a economia no Rio de Janeiro.",
+            "efeito": "GEOGRAFIA: +20% nos rendimentos no RJ.",
+            "tipo": "geografia"
+        },
+        {
+            "titulo": "Alta de Criminalidade na BA",
+            "texto": "Baixa sensibilidade de segurança espanta investimentos na Bahia.",
+            "efeito": "GEOGRAFIA: -20% nos rendimentos na Bahia.",
+            "tipo": "geografia"
+        },
+        {
+            "titulo": "Brasília em Festa",
+            "texto": "Evento internacional movimenta economia no DF.",
+            "efeito": "GEOGRAFIA: +20% nos rendimentos no DF.",
             "tipo": "geografia"
         },
         {
             "titulo": "Reforma Tributária",
-            "texto": "Governo aumenta o peso dos impostos federais.",
-            "efeito": "GLOBAL: Imposto Federal aumenta em 20%.",
+            "texto": "Governo sanciona IOF.",
+            "efeito": "GLOBAL: Todos os pagamentos ao Banco custam 10% a mais.",
             "tipo": "governamental"
+        },
+        {
+            "titulo": "Boom do Agronegócio",
+            "texto": "Alta nas comoditties aumenta lucros do agro.",
+            "efeito": "GLOBAL: Lucros do Agronegócio aumentam em 20%.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Boom Industrial",
+            "texto": "Alta na produção aumenta lucros de industrias.",
+            "efeito": "GLOBAL: Lucros do Setor Industrial aumentam em 20%.",
+            "tipo": "setor"
+        },
+        {
+            "titulo": "Avanço Tecnológico",
+            "texto": "Desenvolvimento tecnológico melhora cenários do setor.",
+            "efeito": "GLOBAL: Lucros de Tecnologia aumentam em 20%.",
+            "tipo": "setor"
         },
         {
             "titulo": "Bolha Imobiliária",
@@ -155,9 +209,51 @@
             "tipo": "global"
         },
         {
+            "titulo": "Feliz Aniversário!",
+            "texto": "Comemorou aniversário, receba os presentes.",
+            "efeito": "Todos pagam 50k para você.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Líder MST",
+            "texto": "Assumiu a liderança de um assentamento sem-terra.",
+            "efeito": "Tome uma propriedade residencial/agronegócio de um jogador mais rico que você.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Lider Sindical",
+            "texto": "Assumiu a liderança de um sindicato.",
+            "efeito": "Escolha uma propriedade industrial/tecnologia de outro jogador para zerar lucros.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Greve Geral",
+            "texto": "Multinacionais sofrem com greves sindicais.",
+            "efeito": "Todas as multinacionais perdem 50% nos lucros.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Troca Livre",
+            "texto": "Troca livre entre jogadores.",
+            "efeito": "Escolha uma propriedade de outro jogador para trocar caso tire valor par nos dados.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Dívidas Apagadas",
+            "texto": "Suas dívidas foram anuladas.",
+            "efeito": "Todas as dívidas financeiras do jogador são canceladas.",
+            "tipo": "global"
+        },
+        {
+            "titulo": "Dívidas Apagadas",
+            "texto": "Suas dívidas foram anuladas.",
+            "efeito": "Todas as dívidas financeiras do jogador são canceladas.",
+            "tipo": "global"
+        },
+        {
             "titulo": "TOC, TOC, TOC",
             "texto": "Operação da Polícia Federal.",
-            "efeito": "PERDA: Vá direto para a Prisão.",
+            "efeito": "PERDA: Entre no camburão e vá para a Prisão.",
             "tipo": "individual_negativo"
         }
     ]

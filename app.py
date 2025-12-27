@@ -656,9 +656,34 @@ def aprovar_salario(player_id):
     
     if pedido:
         PARTIDA[player_id]['saldo'] += pedido['valor']
+        
         registrar_transacao('Banco', player_id, pedido['valor'])
+        
         save_game_state()
-        flash(f"Salário de {pedido['nome']} aprovado!", "success")
+        flash(f"SALÁRIO LIBERADO: R$ {format_brl(pedido['valor'])} creditados para {pedido['nome']}.", "success")
+    else:
+        flash("Erro: Solicitação de salário não encontrada ou já processada.", "error")
+        
+    return redirect(url_for('pagina_banco'))
+
+@app.route('/banco/reprovar_salario/<player_id>', methods=['POST'])
+def reprovar_salario(player_id):
+    if not session.get('bank_logged_in'): return redirect(url_for('banco_login'))
+    
+    if player_id in SOLICITACOES_SALARIO:
+        pedido = SOLICITACOES_SALARIO.pop(player_id)
+        flash(f"Pedido de salário de {pedido['nome']} REPROVADO pelo Banco.", "warning")
+        save_game_state()
+    return redirect(url_for('pagina_banco'))
+
+@app.route('/banco/deletar_divida/<installment_id>', methods=['POST'])
+def deletar_divida(installment_id):
+    if not session.get('bank_logged_in'): return redirect(url_for('banco_login'))
+    
+    if installment_id in COBRANCAS_PARCELADAS:
+        divida = COBRANCAS_PARCELADAS.pop(installment_id)
+        flash("Contrato de dívida anulado com sucesso.", "success")
+        save_game_state()
     return redirect(url_for('pagina_banco'))
 
 @app.route('/leilao/iniciar', methods=['POST'])
@@ -733,10 +758,10 @@ def pagina_banco():
     
     jogadores_monitor = {id: data for id, data in PARTIDA.items() if id not in ('Banco', 'timestamp')}
     
-    historico_global = PARTIDA.get('Banco', {}).get('historico', [])
-    
     id_to_name = {pid: data['name'] for pid, data in PARTIDA.items() if pid not in ('Banco', 'timestamp')}
     id_to_name['Banco'] = 'Banco Central'
+    
+    historico_global = PARTIDA.get('Banco', {}).get('historico', [])
 
     return render_template('banco.html', 
                            jogadores_data=jogadores_monitor,
@@ -744,6 +769,7 @@ def pagina_banco():
                            LEILAO_ATUAL=LEILAO_ATUAL,
                            MANCHETES_VIGENTES=MANCHETES_VIGENTES,
                            SOLICITACOES_SALARIO=SOLICITACOES_SALARIO,
+                           COBRANCAS_PARCELADAS=COBRANCAS_PARCELADAS,
                            historico=reversed(historico_global),
                            id_to_name=id_to_name)
 
@@ -858,7 +884,6 @@ def criar_cobranca_parcelada(credor_id):
 @app.route('/pagar/parcela/<devedor_id>/<installment_id>', methods=['POST'])
 def pagar_cobranca_parcelada(devedor_id, installment_id):
     mensagem = pagar_parcela(devedor_id, installment_id)
-    
     flash(mensagem, 'error' if "Erro" in mensagem else 'success')
     return redirect(url_for('pagina_jogador', player_id=devedor_id))
 
