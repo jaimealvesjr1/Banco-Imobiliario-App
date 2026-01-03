@@ -1,13 +1,14 @@
 {
     "objetivos": [
-        "Sócio Majoritário: Possuir o combo completo (A1+A2+A3) de uma Multinacional + R$ 1.2M de saldo.",
-        "Barão Regional: Ser dono de 3 propriedades em um estado e possuir 2 títulos de Multinacionais.",
+        "Sócio Majoritário: Possuir as 3 ações de uma Multinacional + R$ 1.2M de saldo acumulado.",
+        "Barão Regional: Ser dono de 3 propriedades em um mesmo estado e possuir 2 ações de Multinacionais diferentes.",
         "Magnata Imobiliário: Possuir 5 propriedades Residenciais + R$ 800k de saldo.",
         "Investidor Visionário: R$ 600k na poupança + 4 propriedades qualquer (exceto Multinacionais).",
-        "Trindade Baiana: Possuir as 3 propriedades da Bahia + 1 título de Multinacional A1.",
-        "Líder de Setor: Possuir todas as propriedades Industriais de um estado + R$ 1M de saldo.",
+        "Trindade Baiana: Possuir as 3 propriedades da Bahia + 1 ação de Multinacional.",
+        "Líder de Setor: Possuir todas as propriedades Industriais de um estado + R$ 1.2M de saldo.",
         "Expansão Central: Possuir 3 propriedades entre DF e GO + 2 expansões em cada.",
-        "Diversificação de Ativos: Possuir 1 propriedade de cada classe + 1 título de Multinacional A3."
+        "Dono de Big Tech: Possuir a maioria das propriedades de Tecnologia e uma ação de Multinacional.",
+        "Diversificação de Ativos: Possuir 1 propriedade de cada classe + 1 ação A3 de qualquer Multinacional."
     ],
     "manchetes": [
         {
@@ -15,6 +16,78 @@
             "texto": "Você recebeu informações privilegiadas sobre a Tech Solutions.",
             "efeito": "BÔNUS: Receba 150k se tiver ações, senão receba 50k.",
             "tipo": "individual_positive"
+        },
+        {
+            "titulo": "Programa Minha Casa Minha Vida",
+            "texto": "Aprovado no programa de melhoria residencial.",
+            "efeito": "1 - 2/5 - 6: Melhore propriedades residenciais livremente",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Lobista de Sucesso",
+            "texto": "Jogue um dado e ganhe licitações.",
+            "efeito": "1 - 2/3 - 4/5 - 6: Coloque propriedades em licitação gratuitamente",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Plano Safra",
+            "texto": "Aprovado no programa de apoio ao agronegócio.",
+            "efeito": "1 - 2/5 - 6: Melhore propriedades do agronegócio livremente.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Parceiro SEBRAE",
+            "texto": "Firmou parceria de apoio industrial.",
+            "efeito": "1 - 2/5 - 6: Melhore propriedades industriais livremente.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Apoio do BNDES",
+            "texto": "Recebeu apoio do BNDES para melhoria tecnológica.",
+            "efeito": "1 - 2/5 - 6: Melhore propriedades de tecnologia livremente.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Bem vindo a Vegas!",
+            "texto": "Jogadores jogam rodada em Vegas.",
+            "efeito": "Receba dados x 5% se par ou dados x -5% se ímpar.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Fechamento de Safra",
+            "texto": "Proprietários de agronegócio jogam um dado.",
+            "efeito": "Dado x Produção por propriedade.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Fim de Ano Industrial",
+            "texto": "Proprietários de indústrias jogam um dado.",
+            "efeito": "Dado x Produção por propriedade.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Lançamento de Startup",
+            "texto": "Proprietários de tecnologia jogam um dado.",
+            "efeito": "Dado x Produção por propriedade.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Boom Imobiliário",
+            "texto": "Proprietários de residenciais jogam um dado.",
+            "efeito": "Dado x Aluguel por propriedade.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Pagamento de Dividendos",
+            "texto": "Acionistas jogam um dado.",
+            "efeito": "Dado x lucro por ação.",
+            "tipo": "lancar_dados"
+        },
+        {
+            "titulo": "Auditoria da Receita Federal",
+            "texto": "Todos com propriedades jogam um dado.",
+            "efeito": "1(Prisão) - 2/4(Pague) - 5/6(Receba)",
+            "tipo": "lancar_dados"
         },
         {
             "titulo": "Malha Fina",
