@@ -1,118 +1,109 @@
 {% extends "base.html" %}
 
-{% block title %}{{ 'Selecionar Perfil' if game_active else 'Configurar Partida' }}{% endblock %}
+{% block title %}{{ 'Painel de Controle' if game_active else 'Configurar Partida' }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen py-6 sm:py-10 px-4">
-    <div class="max-w-3xl mx-auto">
+<div class="min-h-screen py-6 px-4">
+    <div class="max-w-4xl mx-auto">
         
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="mb-6 space-y-2">
                     {% for category, message in messages %}
-                        <div class="p-4 rounded-2xl border-2 flex items-center gap-3 animate-pulse
-                            {% if category == 'error' or category == 'warning' %}
-                                bg-red-50 text-red-700 border-red-200
-                            {% else %}
-                                bg-green-50 text-green-700 border-green-200
-                            {% endif %}">
-                            <span class="text-xl">{% if category == 'error' %}⚠️{% else %}✨{% endif %}</span>
-                            <p class="font-bold text-sm">{{ message }}</p>
+                        <div class="p-4 rounded-2xl border-2 flex items-center gap-3 shadow-sm {{ 'bg-red-50 text-red-700 border-red-200' if category in ['error', 'warning'] else 'bg-green-50 text-green-700 border-green-200' }}">
+                            <span class="text-xl">{% if category in ['error', 'warning'] %}⚠️{% else %}✨{% endif %}</span>
+                            <p class="font-black text-xs uppercase tracking-tight">{{ message }}</p>
                         </div>
                     {% endfor %}
                 </div>
             {% endif %}
         {% endwith %}
 
-        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-monopoly-dark">
-            <div class="bg-monopoly-dark p-8 text-center text-white relative">
-                <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-                    <div class="grid grid-cols-6 gap-4 p-4">
-                        {% for i in range(12) %}<div class="text-4xl">💰</div>{% endfor %}
-                    </div>
+        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-gray-900">
+            <div class="bg-gray-900 p-10 text-center text-white relative">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-green-400 text-gray-900 mb-4 shadow-xl transform -rotate-2">
+                    <span class="text-4xl">🚀</span>
                 </div>
-                
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-monopoly-green text-monopoly-dark mb-4 shadow-xl transform -rotate-3">
-                    <span class="text-4xl">🏦</span>
-                </div>
-                <h1 class="text-3xl font-black italic tracking-tighter uppercase">
-                    {{ 'Partida em Curso' if game_active else 'Início de Operação' }}
+                <h1 class="text-3xl font-black italic tracking-tighter uppercase leading-none">
+                    SE TORNE UM MAGNATA!
                 </h1>
-                <p class="text-monopoly-blue text-xs font-bold tracking-widest uppercase mt-2 opacity-80">
-                    {{ 'Escolha seu acesso abaixo' if game_active else 'Defina os parâmetros financeiros' }}
+                <p class="text-cyan-400 text-[10px] font-black tracking-[0.3em] uppercase mt-3 opacity-80">
+                    Digital Banking System v3.5
                 </p>
             </div>
 
-            <div class="p-6 sm:p-10">
+            <div class="p-8">
                 {% if game_active %}
-                <div class="grid grid-cols-1 gap-4">
-                    <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-2">Acesso Administrativo</h2>
-                    <a href="{{ url_for('banco_login') }}" class="group flex items-center justify-between p-5 bg-gray-900 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-lg">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-2xl">🏛️</div>
-                            <div>
-                                <span class="block font-black text-white text-lg">BANCO CENTRAL</span>
-                                <span class="text-[10px] text-monopoly-blue font-bold uppercase tracking-widest">Painel de Controle</span>
+                <div class="space-y-8">
+                    <div>
+                        <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 px-2 italic">Autoridade Monetária</h2>
+                        <a href="{{ url_for('banco_login') }}" class="group flex items-center justify-between p-6 bg-indigo-950 rounded-3xl transition-all hover:scale-[1.01] border-b-4 border-black/40 shadow-lg">
+                            <div class="flex items-center gap-5">
+                                <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-3xl shadow-inner">🏛️</div>
+                                <div>
+                                    <span class="block font-black text-white text-xl italic uppercase">Banco Central</span>
+                                    <span class="text-[9px] text-cyan-400 font-black uppercase tracking-widest">Acesso Restrito ao Banqueiro</span>
+                                </div>
                             </div>
-                        </div>
-                        <span class="text-white/30 group-hover:text-white transition-colors">&rarr;</span>
-                    </a>
-
-                    <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mt-6 mb-2 px-2">Contas Ativas</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {% for player_id, player_name in jogadores %}
-                        <a href="{{ url_for('acessar_perfil', player_id=player_id) }}" 
-                           class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-gray-200 transition-all hover:bg-white hover:shadow-xl group"
-                           style="border-left: 6px solid {{ PARTIDA[player_id].color }}">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl font-black shadow-lg" 
-                                 style="background-color: {{ PARTIDA[player_id].color }}">
-                                {{ player_name[0].upper() }}
-                            </div>
-                            <div class="flex-1">
-                                <span class="block font-black text-gray-800 uppercase text-sm">{{ player_name }}</span>
-                                <span class="text-xs font-bold text-gray-400 font-mono">R$ {{ PARTIDA[player_id].saldo | format_brl }}</span>
-                            </div>
+                            <span class="text-white/20 group-hover:text-white transition-colors text-2xl">➔</span>
                         </a>
-                        {% endfor %}
                     </div>
 
-                    <form method="POST" action="{{ url_for('reset_game') }}" onsubmit="return confirm('ATENÇÃO: Isso apagará todos os saldos e histórico. Confirmar reset?')" class="mt-10 pt-6 border-t border-gray-100">
-                        <button type="submit" class="w-full text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors">
-                            ⚠️ Finalizar Partida e Limpar Dados
+                    <div>
+                        <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 px-2 italic">Contas Ativas no Pregão</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {% for player_id, player_name in jogadores %}
+                            <a href="{{ url_for('acessar_perfil', player_id=player_id) }}" 
+                               class="flex items-center gap-4 p-5 bg-gray-50 rounded-3xl border-2 border-transparent hover:border-gray-200 transition-all hover:bg-white hover:shadow-xl group relative overflow-hidden"
+                               style="border-left: 8px solid {{ PARTIDA[player_id].color }}">
+                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl font-black shadow-md" 
+                                     style="background-color: {{ PARTIDA[player_id].color }}">
+                                    {{ player_name[0].upper() }}
+                                </div>
+                                <div class="flex-1">
+                                    <span class="block font-black text-gray-800 uppercase text-sm italic">{{ player_name }}</span>
+                                    <span class="text-[11px] font-bold text-gray-500 font-mono">R$ {{ PARTIDA[player_id].saldo | format_brl }}</span>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('reset_game') }}" onsubmit="return confirm('ATENÇÃO ESTRATÉGICA: Esta ação é irreversível e apagará todos os dados financeiros. Confirmar encerramento?')">
+                        <button type="submit" class="w-full py-4 text-[9px] font-black text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl uppercase tracking-[0.2em] transition-all border border-dashed border-red-200 mt-4">
+                            ⚠️ Finalizar Partida e Liquidar Ativos
                         </button>
                     </form>
                 </div>
                 
                 {% else %}
-                <form method="POST" action="{{ url_for('dashboard') }}" class="space-y-8" id="setupForm">
+                <form method="POST" action="{{ url_for('dashboard') }}" class="space-y-8">
                     <input type="hidden" name="action" value="iniciar">
-
-                    <div class="bg-monopoly-blue/10 p-6 rounded-3xl border-2 border-monopoly-blue/20">
-                        <label class="block text-[10px] font-black text-monopoly-blue uppercase tracking-widest mb-3">Capital Inicial p/ Jogador</label>
+                    <div class="bg-indigo-50 p-6 rounded-[2rem] border-2 border-indigo-100">
+                        <label class="block text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3 italic">Capital Inicial por jogador</label>
                         <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-black text-monopoly-blue/30">R$</span>
-                            <input type="number" name="saldo_inicial" value="{{ SALDO_INICIAL }}" required min="1"
-                                class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl font-black text-3xl font-mono focus:ring-4 ring-monopoly-blue/20 outline-none text-monopoly-dark">
+                            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-black text-indigo-200">R$</span>
+                            <input type="number" name="saldo_inicial" value="{{ SALDO_INICIAL }}" required 
+                                class="w-full pl-16 pr-6 py-5 bg-white rounded-2xl font-black text-3xl font-mono focus:ring-4 ring-indigo-500/10 outline-none border-none shadow-inner">
                         </div>
                     </div>
 
                     <div class="space-y-4">
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Corpo de Acionistas (Jogadores)</label>
-                        <div id="playersContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            </div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-2 italic text-center">Definição de Jogadores</label>
+                        <div id="playersContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                         
                         <div class="flex gap-2">
-                            <button type="button" onclick="addPlayerField()" class="flex-1 p-4 bg-monopoly-green text-monopoly-dark font-black rounded-2xl hover:opacity-90 transition-all uppercase text-xs shadow-md">
-                                + Adicionar
+                            <button type="button" onclick="addPlayerField()" class="flex-1 p-4 bg-green-500 text-white font-black rounded-2xl hover:bg-green-600 transition-all uppercase text-[10px] shadow-lg">
+                                + Novo Jogador
                             </button>
-                            <button type="button" id="removePlayerButton" onclick="removeLastPlayerField()" class="p-4 bg-red-100 text-red-600 font-black rounded-2xl hover:bg-red-200 transition-all shadow-md">
+                            <button type="button" id="removePlayerButton" onclick="removeLastPlayerField()" class="p-4 bg-red-100 text-red-600 font-black rounded-2xl hover:bg-red-200 transition-all">
                                 🗑️
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-6 bg-monopoly-dark text-white font-black rounded-3xl text-xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter italic">
-                        🚀 Lançar Operação
+                    <button type="submit" class="w-full py-6 bg-gray-900 text-white font-black rounded-[2rem] text-xl shadow-2xl hover:bg-black transition-all uppercase italic tracking-tighter border-b-8 border-gray-700">
+                        ABRIR CONTAS E INICIAR JORNADA
                     </button>
                 </form>
 
@@ -120,42 +111,21 @@
                     const playersContainer = document.getElementById('playersContainer');
                     const presetColors = {{ PRESET_COLORS | tojson }};
                     let playerCount = 0;
-
                     function createPlayerField(index, name = '', color = presetColors[index % presetColors.length]) {
                         const div = document.createElement('div');
-                        div.className = 'flex gap-2 p-2 bg-gray-50 rounded-2xl border-2 border-gray-100 items-center';
+                        div.className = 'flex gap-2 p-3 bg-gray-50 rounded-2xl border-2 border-gray-100 items-center transition-all focus-within:border-indigo-300';
                         div.id = `player-row-${index}`;
                         div.innerHTML = `
                             <input type="color" name="jogador_color_${index}" value="${color}" 
                                    class="w-10 h-10 rounded-xl cursor-pointer border-0 p-0 bg-transparent flex-shrink-0">
-                            <input type="text" name="jogador_name_${index}" placeholder="Nome..." required
-                                   class="flex-1 bg-transparent border-0 font-bold text-sm focus:ring-0 outline-none">
+                            <input type="text" name="jogador_name_${index}" placeholder="Nome do Jogador..." required
+                                   class="flex-1 bg-transparent border-0 font-black text-xs uppercase focus:ring-0 outline-none">
                         `;
                         return div;
                     }
-
-                    function addPlayerField() {
-                        if (playerCount < 8) {
-                            playersContainer.appendChild(createPlayerField(playerCount));
-                            playerCount++;
-                        }
-                        updateRemoveButtonState();
-                    }
-
-                    function removeLastPlayerField() {
-                        if (playerCount > 2) {
-                            playersContainer.removeChild(playersContainer.lastChild);
-                            playerCount--;
-                        }
-                        updateRemoveButtonState();
-                    }
-                    
-                    function updateRemoveButtonState() {
-                        const button = document.getElementById('removePlayerButton');
-                        button.disabled = playerCount <= 2;
-                        button.style.opacity = playerCount <= 2 ? '0.3' : '1';
-                    }
-
+                    function addPlayerField() { if (playerCount < 8) { playersContainer.appendChild(createPlayerField(playerCount)); playerCount++; } updateRemoveButtonState(); }
+                    function removeLastPlayerField() { if (playerCount > 2) { playersContainer.removeChild(playersContainer.lastChild); playerCount--; } updateRemoveButtonState(); }
+                    function updateRemoveButtonState() { const b = document.getElementById('removePlayerButton'); b.disabled = playerCount <= 2; b.style.opacity = playerCount <= 2 ? '0.3' : '1'; }
                     addPlayerField(); addPlayerField();
                 </script>
                 {% endif %}

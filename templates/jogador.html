@@ -16,7 +16,7 @@
         {% endif %}
     {% endwith %}
 
-    <header style="background-color: {{ dados_jogador.color }}" class="relative text-white p-6 rounded-[2.5rem] shadow-2xl border-b-8 border-black/10 overflow-hidden">
+    <header id="player-card-header" style="background-color: {{ dados_jogador.color }}" class="relative text-white p-6 rounded-[2.5rem] shadow-2xl border-b-8 border-black/10 overflow-hidden">
         <div class="flex justify-between items-start mb-4">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center font-black text-xs">{{ dados_jogador.name[0].upper() }}</div>
@@ -53,6 +53,28 @@
         {% endfor %}
     </section>
 
+    {% if LEILAO_ATUAL.get('ativo') %} 
+        <section class="bg-gradient-to-br from-yellow-400 to-yellow-500 p-5 rounded-3xl shadow-xl border-4 border-black mb-4 relative overflow-hidden text-black">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔨</span>
+                    <h3 class="font-black uppercase text-[10px] italic tracking-widest leading-none">Leilão Ativo</h3>
+                </div>
+                <div id="countdown" class="bg-black text-yellow-400 px-3 py-1 rounded-full font-mono font-black text-lg shadow-lg">--s</div>
+            </div>
+            <div class="bg-black/90 p-4 rounded-2xl text-white text-center mb-4 ring-2 ring-yellow-400">
+                <p class="text-[8px] font-bold uppercase opacity-60 text-yellow-400 mb-1">Lance Atual</p>
+                <p class="font-mono font-black text-2xl leading-none">R$ {{ LEILAO_ATUAL.lance_atual | format_brl }}</p>
+            </div>
+            <form method="POST" action="{{ url_for('dar_lance', player_id=player_id) }}" class="flex gap-2">
+                <input type="number" name="lance" inputmode="numeric" pattern="[0-9]*" required 
+                    min="{{ LEILAO_ATUAL.lance_atual + 1 }}" max="{{ dados_jogador.saldo }}" 
+                    class="flex-1 p-3 rounded-xl border-2 border-black font-black text-lg outline-none">
+                <button type="submit" class="bg-black text-white px-6 rounded-xl font-black text-xs uppercase">COBRIR</button>
+            </form>
+        </section>
+    {% endif %}
+
     <section class="bg-white p-5 rounded-3xl shadow-lg border border-gray-50">
         <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">Efetuar Pagamento</h3>
         <form method="POST" action="{{ url_for('transacao') }}" class="space-y-4">
@@ -66,7 +88,7 @@
             <div class="grid grid-cols-3 gap-2">
                 <div class="col-span-2">
                     <label class="text-[8px] font-black text-gray-400 uppercase ml-2">Valor Base</label>
-                    <input type="number" id="valor_base" required placeholder="Ex: 20000" class="w-full p-3 bg-gray-50 rounded-xl font-black text-lg font-mono outline-none border-2 border-transparent focus:border-red-400">
+                    <input type="number" id="valor_base" inputmode="numeric" pattern="[0-9]*" required placeholder="Ex: 20000" class="w-full p-3 bg-gray-50 rounded-xl font-black text-lg font-mono outline-none border-2 border-transparent focus:border-red-400">
                 </div>
                 <div>
                     <label class="text-[8px] font-black text-gray-400 uppercase ml-2">Mult.</label>
@@ -108,7 +130,7 @@
             </div>
             <h2 class="text-xl font-black font-mono leading-none mb-3">R$ {{ dados_jogador.poupanca | format_brl }}</h2>
             <form method="POST" action="{{ url_for('poupanca_jogador', player_id=player_id) }}" class="space-y-2">
-                <input type="number" name="valor" placeholder="R$" class="w-full p-1.5 bg-white/10 rounded-lg text-[10px] font-black border border-white/5 outline-none">
+                <input type="number" name="valor" inputmode="numeric" pattern="[0-9]*" placeholder="R$" class="w-full p-1.5 bg-white/10 rounded-lg text-[10px] font-black border border-white/5 outline-none">
                 <div class="grid grid-cols-2 gap-1.5">
                     <button type="submit" name="action" value="investir" class="bg-white text-indigo-900 py-1.5 rounded-lg text-[8px] font-black uppercase">Investir</button>
                     {% if partida.Banco.poupanca_trancada %}
@@ -123,7 +145,8 @@
         <section class="bg-green-100 p-4 rounded-3xl border border-green-200">
             <p class="text-[8px] font-black uppercase text-green-600 mb-1">Passagem Início</p>
             <form method="POST" action="{{ url_for('solicitar_salario', player_id=player_id) }}" class="space-y-2">
-                <input type="number" name="num_propriedades" placeholder="Posses" required class="w-full p-1.5 bg-white rounded-lg text-[10px] font-bold border border-green-200 outline-none">
+                <input type="number" name="num_propriedades" inputmode="numeric" pattern="[0-9]*" placeholder="Posses" required
+                class="w-full p-1.5 bg-white rounded-lg text-[10px] font-bold border border-green-200 outline-none">
                 <button type="submit" class="w-full bg-green-600 text-white py-1.5 rounded-lg text-[8px] font-black uppercase">Clamar 💰</button>
             </form>
         </section>
@@ -140,8 +163,8 @@
                 {% for dest_id, dest_name in destinatarios if dest_id != 'Banco' %}<option value="{{ dest_id }}">{{ dest_name }}</option>{% endfor %}
             </select>
             <div class="flex gap-2">
-                <input type="number" name="valor_total" placeholder="Total R$" class="flex-1 p-2 bg-white rounded-lg border border-blue-200 text-[10px] font-bold">
-                <input type="number" name="num_parcelas" placeholder="Vezes" min="1" max="12" class="w-16 p-2 bg-white rounded-lg border border-blue-200 text-[10px] font-bold text-center">
+                <input type="number" name="valor_total" inputmode="numeric" pattern="[0-9]*" placeholder="Total R$" class="flex-1 p-2 bg-white rounded-lg border border-blue-200 text-[10px] font-bold">
+                <input type="number" name="num_parcelas" inputmode="numeric" pattern="[0-9]*" placeholder="Vezes" min="1" max="12" class="w-16 p-2 bg-white rounded-lg border border-blue-200 text-[10px] font-bold text-center">
             </div>
             <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-xl font-black text-[10px] uppercase italic">Gerar Carnê</button>
         </form>
@@ -239,6 +262,40 @@
             c.classList.toggle('hidden');
             s.innerText = c.classList.contains('hidden') ? 'REVELAR' : 'OCULTAR';
         }
+        function getContrastYIQ(hexcolor){
+            hexcolor = hexcolor.replace("#", "");
+            var r = parseInt(hexcolor.substr(0,2),16);
+            var g = parseInt(hexcolor.substr(2,2),16);
+            var b = parseInt(hexcolor.substr(4,2),16);
+            var yiq = ((r*299)+(g*587)+(b*114))/1000;
+            return (yiq >= 128) ? 'black' : 'white';
+        }
+        {% if LEILAO_ATUAL.expira_em %}
+            const expiraEm = {{ LEILAO_ATUAL.expira_em * 1000 }};
+            const timer = setInterval(() => {
+                const distancia = expiraEm - new Date().getTime();
+                const display = document.getElementById("countdown");
+                if (display) {
+                    display.innerHTML = Math.max(0, Math.floor(distancia / 1000)) + "s";
+                    if (distancia < 0) { clearInterval(timer); location.reload(); }
+                }
+            }, 1000);
+        {% endif %}
+        window.onload = function() {
+            const playerColor = "{{ dados_jogador.color }}";
+            const textColor = getContrastYIQ(playerColor);
+            const header = document.getElementById('player-card-header');
+            
+            if (textColor === 'black') {
+                header.classList.remove('text-white');
+                header.classList.add('text-gray-900');
+                const subtexts = header.querySelectorAll('.opacity-60, .opacity-70, .opacity-50');
+                subtexts.forEach(el => {
+                    el.classList.remove('opacity-60', 'opacity-70', 'opacity-50');
+                    el.classList.add('text-gray-600');
+                });
+            }
+        };
     </script>
 </div>
 {% endblock %}
