@@ -2,7 +2,7 @@
 {% block title %}Painel Administrativo - Banco Central{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto h-screen flex flex-col overflow-hidden">
+<div class="max-w-7xl mx-auto min-h-screen flex flex-col">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
